@@ -1,3 +1,4 @@
+from Info import *
 from Token import *
 from Lexer import *
 from Parser import *
@@ -14,10 +15,14 @@ while(True):
         break
 file.close()
 
+info = Info()
 
 lex = Lexer(text)
-par = Parser(lex)
+par = Parser(lex,info)
 par.parse()
+print("Info:")
+for p in info.point_list:
+    print(info.point_list[p].name)
 
 # lis = relation_keywords()
 # print(lis)

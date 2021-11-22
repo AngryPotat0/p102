@@ -1,3 +1,4 @@
 point a(1,2),b(3,4)
 point c(4,5) , d(20,45)
-line ab,cd
+line ab,dc
+para ab,cd

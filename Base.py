@@ -15,14 +15,14 @@ class Angle:
         self.lb = lb
 
 class Triangle:
-    def __init__(self,a,b,c) -> None:
-        self.a = a
-        self.b = b
-        self.c = c
+    def __init__(self,la,lb,lc) -> None:
+        self.la = la
+        self.lb = lb
+        self.lc = lc
 
 class Quad:
-    def __init__(self,a,b,c,d) -> None:
-        self.a = a
-        self.b = b
-        self.c = c
-        self.d = d
+    def __init__(self,la,lb,lc,ld) -> None:
+        self.la = la
+        self.lb = lb
+        self.lc = lc
+        self.ld = ld
