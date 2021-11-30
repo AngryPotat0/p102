@@ -1,3 +1,6 @@
+from Base import Line
+
+
 class Element(object):
     def __init__(self) -> None:
         self.data = None
@@ -40,10 +43,37 @@ class UnionFind(object):
             n = self.uf[n].parent
         return n
 
+class GraphInfo:
+    def __init__(self,point_list: list, line_list: list, ponl_list: list) -> None:
+        self.point_list = point_list
+        self.line_list = line_list
+        self.ponl_list = ponl_list
+    
+    def gen_lines(self):
+        base_line = dict()
+        for ponl in self.ponl_list:
+            p = ponl.point
+            l = ponl.line
+            if(l in base_line):
+                base_line[l].append(p)
+            else:
+                base_line[l] = [p]
+
+        for bl in base_line.keys():
+            lis = base_line[bl]
+            lis.insert(0,bl[0])
+            lis.append(bl[1])
+            for i in range(0,len(lis)):
+                for j in range(i + 1,len(lis)):
+                    if(i == 0 and j == len(lis) - 1):
+                        continue
+                    self.line_list.append(Line(lis[i],lis[j]))
+
 class Info:
     def __init__(self) -> None:
-        self.point_list = dict()
-        self.line_list = dict()
+        # self.point_list = dict()
+        # self.line_list = list()#所有的线
+        self.con_line = UnionFind()
         self.eqa_lines = UnionFind()
         self.eqa_angles = UnionFind()
         self.para_list = UnionFind()

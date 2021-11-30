@@ -3,9 +3,11 @@ from Base import *
 from Info import *
 
 class Parser:
-    def __init__(self,lex,info) -> None:
+    def __init__(self,lex) -> None:
         self.lex = lex
-        self.info = info
+        self.graph_info = None
+        self.point_check = dict()
+        self.info = Info()
         self.currentToken = lex.get_next_token()
 
     def eat(self,expect_type):
@@ -21,29 +23,41 @@ class Parser:
         raise Exception('Not define {gt} {nm}'.format(gt = gtype,nm = name))
 
     def parse(self):
+        point_list = list()
+        line_list = list()
+        ponl_list = list()
         while(self.currentToken.type != TokenType.EOF):
             if(self.currentToken.type == TokenType.POINT):
                 lis = self.point_define()
+                point_list.extend(lis)
                 for p in lis:
-                    print(p.name,p.x,p.y)
-                    self.info.point_list[p.name] = p
+                    # print(p.name,p.x,p.y)
+                    self.point_check[p.name] = 1
             elif(self.currentToken.type == TokenType.LINE):
                 lis = self.line_define()
                 for l in lis:
-                    print(l.a,l.b)
-                    if(l.a in self.info.point_list and l.b in self.info.point_list):
-                        self.info.line_list[l.a + l.b] = l
-                        self.info.line_list[l.b + l.a] = l
+                    # print(l.a,l.b)
+                    if(l.a in self.point_check and l.b in self.point_check):
+                        line_list.append(l)
                     else:
-                        name = l.a if l.b in self.info.point_list else l.b
+                        name = l.a if l.b in self.point_check else l.b
                         self.notDefine("Point",name)
+            elif(self.currentToken.type == TokenType.PONL):
+                lis = self.point_on_line()
+                ponl_list.extend(lis)
             elif(self.currentToken.type == TokenType.PROF):
-                self.prof()
+                # self.prof()
+                print("not ready yet")
             elif(self.currentToken.value in relation_keywords()):
-                rlt = self.relation()
-                print(rlt)
+                # rlt = self.relation()
+                # print(rlt)
+                print("not ready yet")
             else:
                 self.error()
+        self.graph_info = GraphInfo(point_list,line_list,ponl_list)
+    
+    def get_graph_info(self) -> GraphInfo:
+        return self.graph_info
 
     def point(self):
         name = self.currentToken.value
@@ -81,6 +95,19 @@ class Parser:
             res.append(Line(name[0],name[1]))
         return res
 
+    def point_on_line(self):
+        res = []
+        self.eat(TokenType.PONL)
+        res.append(self.currentToken.value)
+        self.eat(TokenType.ID)
+        while(self.currentToken.type == TokenType.COMMA):
+            self.eat(TokenType.COMMA)
+            res.append(self.currentToken.value)
+            self.eat(TokenType.ID)
+        point_list = res[0:-1]
+        line = res[-1]
+        return [Ponl(p,line) for p in point_list]
+
     def relation(self):
         lis = []
         tp = self.currentToken.type
@@ -93,7 +120,7 @@ class Parser:
             name = self.currentToken.value
             self.eat(TokenType.ID)
             lis.append(name)
-        return (tp,lis)
+        return Relation((tp,lis))
 
     def prof(self):
         self.eat(TokenType.PROF)

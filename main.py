@@ -3,9 +3,6 @@ from Token import *
 from Lexer import *
 from Parser import *
 
-def start(command):
-    pass
-
 text = ""
 file = open('program.txt')
 while(True):
@@ -15,14 +12,16 @@ while(True):
         break
 file.close()
 
-info = Info()
-
 lex = Lexer(text)
-par = Parser(lex,info)
+par = Parser(lex)
 par.parse()
-print("Info:")
-for p in info.point_list:
-    print(info.point_list[p].name)
+graph = par.get_graph_info()
+graph.gen_lines()
+for p in graph.point_list:
+    print(p)
 
-# lis = relation_keywords()
-# print(lis)
+for ponl in graph.ponl_list:
+    print(ponl)
+
+for l in graph.line_list:
+    print(l)
