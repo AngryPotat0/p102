@@ -50,10 +50,13 @@ class GraphInfo:
         self.ponl_list = ponl_list
     
     def gen_lines(self):
+        point_check = dict()
+        for p in self.point_list:
+            point_check[p.get_name()] = p
         base_line = dict()
         for ponl in self.ponl_list:
-            p = ponl.point
-            l = ponl.line
+            p = ponl.point.get_name()
+            l = ponl.line.get_name()
             if(l in base_line):
                 base_line[l].append(p)
             else:
@@ -67,7 +70,8 @@ class GraphInfo:
                 for j in range(i + 1,len(lis)):
                     if(i == 0 and j == len(lis) - 1):
                         continue
-                    self.line_list.append(Line(lis[i],lis[j]))
+                    # self.line_list.append(Line(lis[i],lis[j]))
+                    self.line_list.append(Line(point_check[lis[i]],point_check[lis[j]]))
 
 class Info:
     def __init__(self) -> None:

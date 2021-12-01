@@ -7,6 +7,7 @@ class Parser:
         self.lex = lex
         self.graph_info = None
         self.point_check = dict()
+        self.line_check = dict()
         self.info = Info()
         self.currentToken = lex.get_next_token()
 
@@ -22,6 +23,9 @@ class Parser:
     def notDefine(self,gtype,name):
         raise Exception('Not define {gt} {nm}'.format(gt = gtype,nm = name))
 
+    def errorMsg(self,msg):
+        raise Exception(msg)
+
     def parse(self):
         point_list = list()
         line_list = list()
@@ -31,20 +35,24 @@ class Parser:
                 lis = self.point_define()
                 point_list.extend(lis)
                 for p in lis:
-                    # print(p.name,p.x,p.y)
-                    self.point_check[p.name] = 1
+                    self.point_check[p.name] = p
             elif(self.currentToken.type == TokenType.LINE):
                 lis = self.line_define()
                 for l in lis:
-                    # print(l.a,l.b)
-                    if(l.a in self.point_check and l.b in self.point_check):
-                        line_list.append(l)
+                    if(len(l) > 2):
+                        self.errorMsg("Line Define Error, length of name must less then 2")
+                    elif(l[0] in self.point_check and l[1] in self.point_check):
+                        line_list.append(Line(self.point_check[l[0]],self.point_check[l[1]]))
+                        self.line_check[l[0] + l[1]] = self.line_check[l[1] + l[0]] = Line(self.point_check[l[0]],self.point_check[l[1]])
                     else:
-                        name = l.a if l.b in self.point_check else l.b
+                        name = l[0] if l[1] in self.point_check else l[1]
                         self.notDefine("Point",name)
             elif(self.currentToken.type == TokenType.PONL):
                 lis = self.point_on_line()
-                ponl_list.extend(lis)
+                points = lis[0:-1]
+                line = lis[-1]
+                for p in points:
+                    ponl_list.append(Ponl(self.point_check[p],self.line_check[line]))
             elif(self.currentToken.type == TokenType.PROF):
                 # self.prof()
                 print("not ready yet")
@@ -87,12 +95,12 @@ class Parser:
         self.eat(TokenType.LINE)
         name = self.currentToken.value
         self.eat(TokenType.ID)
-        res.append(Line(name[0],name[1]))
+        res.append(name)
         while(self.currentToken.type == TokenType.COMMA):
             self.eat(TokenType.COMMA)
             name = self.currentToken.value
             self.eat(TokenType.ID)
-            res.append(Line(name[0],name[1]))
+            res.append(name)
         return res
 
     def point_on_line(self):
@@ -104,9 +112,7 @@ class Parser:
             self.eat(TokenType.COMMA)
             res.append(self.currentToken.value)
             self.eat(TokenType.ID)
-        point_list = res[0:-1]
-        line = res[-1]
-        return [Ponl(p,line) for p in point_list]
+        return res
 
     def relation(self):
         lis = []
