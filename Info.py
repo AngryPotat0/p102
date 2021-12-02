@@ -77,11 +77,15 @@ class Info:
     def __init__(self) -> None:
         # self.point_list = dict()
         # self.line_list = list()#所有的线
-        self.con_line = UnionFind()
-        self.eqa_lines = UnionFind()
-        self.eqa_angles = UnionFind()
-        self.para_list = UnionFind()
-        self.simtri_list = UnionFind()
-        self.contri_list = UnionFind()
-        self.col_list = UnionFind()
+        self.con_line = None
+        self.eqa_lines = None
+        self.eqa_angles = None
+        self.para_list = None
+        self.simtri_list = None
+        self.contri_list = None
+        self.col_list = None
+    
+    def get_col_lines(self,line_list: list) -> None:
+        for line in line_list:
+            pass
 

@@ -26,8 +26,12 @@ class Point:
 
 class Line:
     def __init__(self,a: Point,b: Point) -> None:
-        self.a = a
-        self.b = b
+        self.a = None
+        self.b = None
+        if(a.get_name() < b.get_name()):#FIXME: 我也不相信这段代码
+            self.a, self.b = a, b
+        else:
+            self.a, self.b = b, a
         self.A = 0
         self.B = 0
         self.C = 0
@@ -44,9 +48,6 @@ class Line:
             if(b == 0): return a
             return b if a % b == 0 else gcd(b, a % b)
         def get_gcd(a,b,c):
-            # lis = [a,b,c]
-            # lis.sort()
-            # l1, l2, l3 = lis[0], lis[1], lis[2]
             return gcd(gcd(a,b),c)
 
         if(self.A != 0):
@@ -79,6 +80,10 @@ class Line:
                 return False
         else:
             raise Exception("The Type must be Line")
+    
+    def __hash__(self) -> int: #FIXME: I dont belive this code
+        name = self.a.get_name() + self.b.get_name()
+        return hash(name)
     
 
 
