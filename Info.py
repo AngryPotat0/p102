@@ -1,10 +1,14 @@
+from os import name, spawnle
+from typing import List
 from Base import Line
 
-
 class Element(object):
-    def __init__(self) -> None:
-        self.data = None
+    def __init__(self, data = None) -> None:
+        self.data = data
         self.parent = -1
+
+ElementList = List[Element]
+LineList = List[Line]
 
 class UnionFind(object):
     def __init__(self) -> None:
@@ -12,8 +16,12 @@ class UnionFind(object):
         self.sizes = list()
         self.top = 0
         self.count = 0
+
+    def get_uf(self) -> ElementList:
+        return self.uf
     
-    def add(self,elem: Element) -> int:
+    def add(self,data) -> int:
+        elem = Element(data)
         elem.parent = self.top
         self.uf.append(elem)
         self.sizes.append(1)
@@ -77,7 +85,8 @@ class Info:
     def __init__(self) -> None:
         # self.point_list = dict()
         # self.line_list = list()#所有的线
-        self.con_line = None
+        self.con_line = UnionFind()
+        self.con_line_check = dict() #line_name : unionFind_index
         self.eqa_lines = None
         self.eqa_angles = None
         self.para_list = None
@@ -85,7 +94,41 @@ class Info:
         self.contri_list = None
         self.col_list = None
     
-    def get_col_lines(self,line_list: list) -> None:
-        for line in line_list:
-            pass
+    def set_col_lines(self,line_list: LineList) -> None:
+        for line in line_list:# add line into unionFind
+            if(line.get_name() not in self.con_line_check):
+                self.con_line_check[line.get_name()] = self.con_line.add(line)
+            else:
+                raise Exception("Line {name} exists".format(name = line.get_name()))
+        #FIXME: 第一个愚蠢版本，就先看看效果，记得一定要改
+        for i in range(0,len(line_list)):
+            for j in range(i + 1,len(line_list)):
+                line_i = line_list[i]
+                line_j = line_list[j]
+                if(line_i.A == line_j.A and line_i.B == line_j.B and line_i.C == line_j.C):
+                    index_i = self.con_line_check[line_i.get_name()]
+                    index_j = self.con_line_check[line_j.get_name()]
+                    self.con_line.union(index_i,index_j)
+    
+    def get_col_lines(self) -> None: # Just for Test
+        uf = self.con_line.get_uf()
+        for i in range(0,len(uf)):
+            elem = uf[i]
+            if(elem.parent == i):
+                print("base Line:{name}".format(name = elem.data.get_name()))
+                #Ok, it's extremely stupid
+                follow_line_list = list()
+                base = i
+                base_name = elem.data.get_name()
+                for e in uf:
+                    name = e.data.get_name()
+                    index = self.con_line_check[name]
+                    p = self.con_line.find(index)
+                    if(p == base and name != base_name):
+                        follow_line_list.append(name)
+                if(len(follow_line_list) > 0):
+                    print("----follow these line:")
+                    print("--------" + " ".join(follow_line_list))
+
+
 

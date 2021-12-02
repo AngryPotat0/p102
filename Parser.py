@@ -67,6 +67,9 @@ class Parser:
     def get_graph_info(self) -> GraphInfo:
         return self.graph_info
 
+    def get_info(self) -> Info:
+        return self.info
+
     def point(self):
         name = self.currentToken.value
         self.eat(TokenType.ID)

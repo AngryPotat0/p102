@@ -16,6 +16,8 @@ lex = Lexer(text)
 par = Parser(lex)
 par.parse()
 graph = par.get_graph_info()
+info = par.get_info()
+
 graph.gen_lines()
 for p in graph.point_list:
     print(p)
@@ -25,3 +27,6 @@ for ponl in graph.ponl_list:
 
 for l in graph.line_list:
     print(l)
+
+info.set_col_lines(graph.line_list)
+info.get_col_lines()
