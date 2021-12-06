@@ -8,7 +8,7 @@ class Parser:
         self.graph_info = None
         self.point_check = dict()
         self.line_check = dict()
-        self.info = Info()
+        # self.info = Info()
         self.currentToken = lex.get_next_token()
 
     def eat(self,expect_type):
@@ -67,8 +67,8 @@ class Parser:
     def get_graph_info(self) -> GraphInfo:
         return self.graph_info
 
-    def get_info(self) -> Info:
-        return self.info
+    # def get_info(self) -> Info:
+    #     return self.info
 
     def point(self):
         name = self.currentToken.value

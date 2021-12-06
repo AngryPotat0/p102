@@ -1,85 +1,71 @@
-from os import name, spawnle
-from typing import List
-from Base import Line
+from os import linesep, name, spawnle
+from typing import List, Union
+from Base import*
+from UnionFInd import*
 
-class Element(object):
-    def __init__(self, data = None) -> None:
-        self.data = data
-        self.parent = -1
+def find_graph(lis: list) -> list[str]:
+    circs_list = list()
 
-ElementList = List[Element]
-LineList = List[Line]
-
-class UnionFind(object):
-    def __init__(self) -> None:
-        self.uf = list()
-        self.sizes = list()
-        self.top = 0
-        self.count = 0
-
-    def get_uf(self) -> ElementList:
-        return self.uf
-    
-    def add(self,data) -> int:
-        elem = Element(data)
-        elem.parent = self.top
-        self.uf.append(elem)
-        self.sizes.append(1)
-        self.top += 1
-        self.count += 1
-        return self.top - 1
-
-    def connected(self,a,b) -> bool:
-        pa = self.find(a)
-        pb = self.find(b)
-        return pa == pb
-
-    def union(self,a,b) -> None:
-        pa = self.find(a)
-        pb = self.find(b)
-        if(pa == pb): return
-        if(self.sizes[pa] > self.sizes[pb]):
-            self.uf[pb].parent = pa
-            self.sizes[pa] += self.sizes[pb]
+    def find_circs_starts_with(G,length,path):
+        l, last = len(path), path[-1]
+        cnt = 0
+        if (l == length - 1):
+            for i in G[last]:
+                if ((i > path[1]) and (i not in path) and (path[0] in G[i])):
+                    # print(path + [i])
+                    ret = path + [i]
+                    circs_list.append(ret[:])
+                    cnt += 1
         else:
-            self.uf[pa].parent = pb
-            self.sizes[pb] += self.sizes[pa]
+            for i in G[last]:
+                if(i > path[0] and i not in path):
+                    cnt += find_circs_starts_with(G,length, path + [i])
+        return cnt
 
-    def find(self,n):
-        while(self.uf[n].parent != n):
-            self.uf[n].parent = self.uf[self.uf[n].parent].parent
-            n = self.uf[n].parent
-        return n
+    def find_cirs_of_length(G,n,length):
+        cnt = 0
+        for i in range(1,n - length + 2):
+            cnt += find_circs_starts_with(G,length,[i])
+        return cnt
 
-class GraphInfo:
-    def __init__(self,point_list: list, line_list: list, ponl_list: list) -> None:
-        self.point_list = point_list
-        self.line_list = line_list
-        self.ponl_list = ponl_list
-    
-    def gen_lines(self):
-        point_check = dict()
-        for p in self.point_list:
-            point_check[p.get_name()] = p
-        base_line = dict()
-        for ponl in self.ponl_list:
-            p = ponl.point.get_name()
-            l = ponl.line.get_name()
-            if(l in base_line):
-                base_line[l].append(p)
-            else:
-                base_line[l] = [p]
+    def find_all_cirs(G,n):
+        cnt = 0
+        for i in range(3,n + 1):
+            cnt += find_cirs_of_length(G,n,i)
+        return cnt
 
-        for bl in base_line.keys():
-            lis = base_line[bl]
-            lis.insert(0,bl[0])
-            lis.append(bl[1])
-            for i in range(0,len(lis)):
-                for j in range(i + 1,len(lis)):
-                    if(i == 0 and j == len(lis) - 1):
-                        continue
-                    # self.line_list.append(Line(lis[i],lis[j]))
-                    self.line_list.append(Line(point_check[lis[i]],point_check[lis[j]]))
+    # find_all_cirs(G,5)
+
+    # lis = list()
+    # n = int(input())
+    # for i in range(0,n):
+    #     lis.append(input())
+
+    line_map = dict()
+    for line in lis:
+        start = ord(line[0]) - ord('a') + 1
+        dist = ord(line[1]) - ord('a') + 1
+        if(start in line_map):
+            line_map[start].add(dist)
+        else:
+            line_map[start] = {dist}
+        if(dist in line_map):
+            line_map[dist].add(start)
+        else:
+            line_map[dist] = {start}
+
+    # print(line_map,len(line_map))
+    find_all_cirs(line_map,len(line_map))
+    # print(circs_list)
+
+    graph_list = [[] for i in range(0,len(circs_list))]
+
+    for i in range(0,len(graph_list)):
+        for j in range(0,len(circs_list[i])):
+            graph_list[i].append(chr(circs_list[i][j] + ord('a') - 1))
+
+    return graph_list
+
 
 class Info:
     def __init__(self) -> None:
@@ -87,9 +73,9 @@ class Info:
         # self.line_list = list()#所有的线
         self.con_line = UnionFind()
         self.con_line_check = dict() #line_name : unionFind_index
-        self.eqa_lines = None
+        self.eqa_lines = UnionFind()
+        self.para_lines = UnionFind()
         self.eqa_angles = None
-        self.para_list = None
         self.simtri_list = None
         self.contri_list = None
         self.col_list = None
@@ -130,5 +116,99 @@ class Info:
                     print("----follow these line:")
                     print("--------" + " ".join(follow_line_list))
 
+class GraphInfo:
+    def __init__(self,point_list: list, line_list: list, ponl_list: list) -> None:
+        self.info = Info()
+        self.point_list = point_list
+        self.line_list = line_list
+        self.ponl_list = ponl_list
+        self.gen_lines()
+        self.info.set_col_lines(self.line_list)
+        self.gen_graph()
+    
+    def gen_lines(self) -> None:
+        point_check = dict()
+        for p in self.point_list:
+            point_check[p.get_name()] = p
+        base_line = dict()
+        for ponl in self.ponl_list:
+            p = ponl.point.get_name()
+            l = ponl.line.get_name()
+            if(l in base_line):
+                base_line[l].append(p)
+            else:
+                base_line[l] = [p]
 
+        for bl in base_line.keys():
+            lis = base_line[bl]
+            lis.insert(0,bl[0])
+            lis.append(bl[1])
+            for i in range(0,len(lis)):
+                for j in range(i + 1,len(lis)):
+                    if(i == 0 and j == len(lis) - 1):
+                        continue
+                    # self.line_list.append(Line(lis[i],lis[j]))
+                    self.line_list.append(Line(point_check[lis[i]],point_check[lis[j]]))
+    
+    def gen_graph(self) -> None:#run after gen_line
+        line_filter = set()
+        line_name_list = list()
+        for ponl in self.ponl_list:
+            line_name = ponl.line.get_name()
+            line_filter.add(line_name)
+        for line in self.line_list:
+            line_name = line.get_name()
+            if(line_name in line_filter):
+                continue
+            else:
+                line_name_list.append(line_name)
+        # print("++++++++++++++++++++++++++++++++++")
+        # print(line_name_list)
+        # print("++++++++++++++++++++++++++++++++++")
+        graph_list = find_graph(line_name_list)
+        # print("gen_graph+++++++++++++++++++++++++++++++++++++")
+        # print(graph_list)
+        # print("+++++++++++++++++++++++++++++++++++++++++++++++")
+        self.set_graph(graph_list)
+
+    def set_graph(self,graph_list) -> None:
+        def find_end_point(lis:list) -> list:
+            # print("DEBUG::find_end_point:",lis)
+            if(len(lis) == 1):
+                return [lis[0][0],lis[0][1]]
+            ret = list()
+            point_count = dict()
+            line = "".join(lis)
+            for p in line:
+                if(p in point_count):
+                    point_count[p] += 1
+                else:
+                    point_count[p] = 1
+            for k in line:
+                if(point_count[k] == 1):
+                    ret.append(k)
+            return ret
+
+        for graph in graph_list:
+            # print("**GRAPH debug:",graph)
+            line_count = dict()
+            for i in range(0,len(graph)):
+                lis = [graph[i],graph[(i+1) % len(graph)]]
+                lis.sort()
+                name = lis[0] + lis[1]
+                p = self.info.con_line.find(self.info.con_line_check[name])
+                if(p in line_count):
+                    line_count[p].append(name)
+                else:
+                    line_count[p] = [name]
+
+            if(len(line_count) <= 4):
+                graph_count = set()
+                for k in line_count.keys():
+                    lis = find_end_point(line_count[k])
+                    # print("DEBUG::find_end_point_result:",lis)
+                    graph_count.add(lis[0])
+                    graph_count.add(lis[1])
+                print("DEBUG::graph:",graph_count)#TODO: add graph into list
+                    
 
