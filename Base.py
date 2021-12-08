@@ -101,17 +101,23 @@ class Angle:
         self.lb = lb
 
 class Triangle:
-    def __init__(self,la,lb,lc) -> None:
+    def __init__(self,la: Line,lb: Line,lc: Line) -> None:
         self.la = la
         self.lb = lb
         self.lc = lc
+        
+    def __str__(self):
+        return 'Triangle with line:{a},{b},{c}'.format(a=self.la.get_name(), b=self.lb.get_name(), c=self.lc.get_name())
 
 class Quad:
-    def __init__(self,la,lb,lc,ld) -> None:
+    def __init__(self,la: Line,lb: Line,lc: Line,ld: Line) -> None:
         self.la = la
         self.lb = lb
         self.lc = lc
         self.ld = ld
+    
+    def __str__(self):
+        return 'Quad with line:{a},{b},{c},{d}'.format(a=self.la.get_name(), b=self.lb.get_name(), c=self.lc.get_name(), d=self.ld.get_name())
 
 class Relation:
     def __init__(self,val) -> None:

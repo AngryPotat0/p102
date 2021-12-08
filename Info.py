@@ -120,11 +120,25 @@ class GraphInfo:
     def __init__(self,point_list: list, line_list: list, ponl_list: list) -> None:
         self.info = Info()
         self.point_list = point_list
+        self.point_find = dict()
         self.line_list = line_list
+        self.line_find = dict()
         self.ponl_list = ponl_list
+
+        self.triangle_list = list()
+        self.quad_list = list()
+
         self.gen_lines()
         self.info.set_col_lines(self.line_list)
+        self.init_find()
         self.gen_graph()
+    
+    def init_find(self):
+        for p in self.point_list:
+            self.point_find[p.get_name()] = p
+        for line in self.line_list:
+            # print("line_name_debug::",line)
+            self.line_find[line.get_name()] = line
     
     def gen_lines(self) -> None:
         point_check = dict()
@@ -203,12 +217,16 @@ class GraphInfo:
                     line_count[p] = [name]
 
             if(len(line_count) <= 4):
-                graph_count = set()
+                graph_line_list = list()
                 for k in line_count.keys():
                     lis = find_end_point(line_count[k])
-                    # print("DEBUG::find_end_point_result:",lis)
-                    graph_count.add(lis[0])
-                    graph_count.add(lis[1])
-                print("DEBUG::graph:",graph_count)#TODO: add graph into list
-                    
+                    if(len(lis) != 2):#FIXME: WHY???
+                        raise Exception("find_end_point Error,lis={a}".format(a = lis))
+                    lis.sort()
+                    # line_name = lis[0] + lis[1]
+                    graph_line_list.append(self.line_find[lis[0] + lis[1]])
+                if(len(line_count) == 3):
+                    self.triangle_list.append(Triangle(graph_line_list[0],graph_line_list[1],graph_line_list[2]))
+                else:
+                    self.quad_list.append(Quad(graph_line_list[0],graph_line_list[1],graph_line_list[2],graph_line_list[3]))
 
