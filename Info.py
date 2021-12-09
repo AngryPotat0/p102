@@ -69,15 +69,22 @@ def find_graph(lis: list) -> list[str]:
 
 class Info:
     def __init__(self) -> None:
-        # self.point_list = dict()
-        # self.line_list = list()#所有的线
         self.con_line = UnionFind()
-        # self.con_line_check = dict() #line_name : unionFind_index
         self.equ_lines = UnionFind()
         self.para_lines = UnionFind()
         self.equ_angles = UnionFind()
+        self.simtri_list = UnionFind()
+        self.contri_list = UnionFind()
+
+        self.eqtri_list = dict() #name : object
+        self.isotri_list = dict()
+        self.paral_list = dict()
+        self.rect_list = dict()
+        self.rhom_list = dict()
+        self.squar_list = dict()
+        self.rang_list = dict()
     
-    def set_col_lines(self,line_list: LineList) -> None: #FIXME: 第一个愚蠢版本，就先看看效果，记得一定要改
+    def init_col_lines(self,line_list: LineList) -> None: #FIXME: 第一个愚蠢版本，就先看看效果，记得一定要改
         [self.con_line.add(line) for line in line_list]
         for i in range(0,len(line_list)):
             for j in range(i + 1,len(line_list)):
@@ -105,10 +112,33 @@ class Info:
                     print("--------" + " ".join(follow_line_list))
     
     def init_equ_lines(self,line_list: LineList) -> None:
-        pass
+        [self.equ_lines.add(line) for line in line_list]
 
-    def init_equ_angles(self,line_list: LineList) -> None:
-        pass
+    def init_para_lines(self) -> None:
+        elem_list = self.con_line.get_uf()
+        for i in range(0,len(elem_list)):
+            elem = elem_list[i]
+            if(elem.parent == i): self.para_lines.add(elem.data)
+
+    def init_equ_angles(self) -> None: #run this after init_col_lines
+        elem_list = self.con_line.get_uf()
+        base_line_list = list()
+        for i in range(0,len(elem_list)):
+            elem = elem_list[i]
+            if(elem.parent == i): base_line_list.append(elem.data)
+        
+        for i in range(0,len(base_line_list)): #FIXME: 平行线问题
+            for j in range(i + 1,len(base_line_list)):
+                self.equ_angles.add(Angle(base_line_list[i],base_line_list[j]))
+                self.equ_angles.add(Angle(base_line_list[j],base_line_list[i]))
+        # print("DEBUG:: angle list:")
+        # [print(elem.data.get_name(),end=" ") for elem in self.equ_angles.get_uf()]
+        # print()
+
+    def init_triangle(self,triangle_list: List[Triangle]) -> None:
+        for triangle in triangle_list:
+            self.simtri_list.add(triangle)
+            self.contri_list.add(triangle)
 
 class GraphInfo:
     def __init__(self,point_list: list, line_list: list, ponl_list: list) -> None:
@@ -123,7 +153,13 @@ class GraphInfo:
         self.quad_list = list()
 
         self.gen_lines()
-        self.info.set_col_lines(self.line_list)
+        self.info.init_col_lines(self.line_list)
+        self.info.init_equ_lines(self.line_list)
+        self.info.init_para_lines()
+        self.info.init_equ_angles()
+
+        self.info.init_triangle(self.triangle_list)
+
         self.init_find()
         self.gen_graph()
     

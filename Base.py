@@ -1,6 +1,5 @@
 from os import name
 from typing import Tuple
-import math
 
 
 class Point:
@@ -9,7 +8,7 @@ class Point:
         self.x = x
         self.y = y
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self.name
     
     def __str__(self):
@@ -62,7 +61,7 @@ class Line:
         self.C = self.C / t
                 
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self.a.get_name() + self.b.get_name()
     
     def __str__(self):
@@ -96,16 +95,25 @@ class Ponl:
     
 
 class Angle:
-    def __init__(self,la,lb) -> None:
+    def __init__(self,la: Line,lb: Line) -> None:
         self.la = la
         self.lb = lb
+
+    def get_name(self) -> str: # just for UnionFind
+        return self.la.get_name() + "-" + self.lb.get_name()
+    
+    def __str__(self) -> str:
+        return 'Angle with line:{a},{b}'.format(a=self.la.get_name(), b=self.lb.get_name())
 
 class Triangle:
     def __init__(self,la: Line,lb: Line,lc: Line) -> None:
         self.la = la
         self.lb = lb
         self.lc = lc
-        
+    
+    def get_name(self) -> str: # just for UnionFind
+        return self.la.get_name() + "-" + self.lb.get_name() + "-" + self.lc.get_name()
+    
     def __str__(self):
         return 'Triangle with line:{a},{b},{c}'.format(a=self.la.get_name(), b=self.lb.get_name(), c=self.lc.get_name())
 
