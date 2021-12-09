@@ -81,7 +81,7 @@ class Line:
         else:
             raise Exception("The Type must be Line")
     
-    def __hash__(self) -> int: #FIXME: I dont belive this code
+    def __hash__(self) -> int: #FIXME: 正确性无法保证
         name = self.a.get_name() + self.b.get_name()
         return hash(name)
     

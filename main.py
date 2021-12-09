@@ -28,7 +28,7 @@ for ponl in graph.ponl_list:
 for l in graph.line_list:
     print(l)
 
-# graph.info.get_col_lines()
+graph.info.get_col_lines()
 for triangle in graph.triangle_list:
     print(triangle)
 for quad in graph.quad_list:

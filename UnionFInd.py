@@ -13,6 +13,7 @@ LineList = List[Line]
 class UnionFind(object):
     def __init__(self) -> None:
         self.uf = list()
+        self.uf_find = dict() #name : index
         self.sizes = list()
         self.top = 0
         self.count = 0
@@ -20,23 +21,24 @@ class UnionFind(object):
     def get_uf(self) -> ElementList:
         return self.uf
     
-    def add(self,data) -> int:
+    def add(self,data) -> None:
         elem = Element(data)
         elem.parent = self.top
         self.uf.append(elem)
         self.sizes.append(1)
         self.top += 1
         self.count += 1
-        return self.top - 1
+        # return self.top - 1
+        self.uf_find[data.get_name()] = self.top - 1
 
-    def connected(self,a,b) -> bool:
-        pa = self.find(a)
-        pb = self.find(b)
+    def connected(self,a_name: str,b_name: str) -> bool:
+        pa = self.find(a_name)
+        pb = self.find(b_name)
         return pa == pb
 
-    def union(self,a,b) -> None:
-        pa = self.find(a)
-        pb = self.find(b)
+    def union(self,a_name: str,b_name: str) -> None:
+        pa = self.find(a_name)
+        pb = self.find(b_name)
         if(pa == pb): return
         if(self.sizes[pa] > self.sizes[pb]):
             self.uf[pb].parent = pa
@@ -45,7 +47,8 @@ class UnionFind(object):
             self.uf[pa].parent = pb
             self.sizes[pb] += self.sizes[pa]
 
-    def find(self,n):
+    def find(self,name: str) -> int:
+        n = self.uf_find[name]
         while(self.uf[n].parent != n):
             self.uf[n].parent = self.uf[self.uf[n].parent].parent
             n = self.uf[n].parent
