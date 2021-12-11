@@ -1,4 +1,4 @@
-from os import name
+from os import SEEK_CUR, name, set_inheritable
 from typing import Tuple
 
 
@@ -110,9 +110,25 @@ class Triangle:
         self.la = la
         self.lb = lb
         self.lc = lc
+        self.point_set = set()
+        self.point_set.add(self.la.a.get_name())
+        self.point_set.add(self.la.b.get_name())
+        self.point_set.add(self.lb.a.get_name())
+        self.point_set.add(self.lb.b.get_name())
+        self.point_set.add(self.lc.a.get_name())
+        self.point_set.add(self.lc.b.get_name())
+        # print("Triangle test: ",self.get_name())
     
     def get_name(self) -> str: # just for UnionFind
-        return self.la.get_name() + "-" + self.lb.get_name() + "-" + self.lc.get_name()
+        lis = list(self.point_set)
+        lis.sort()
+        return lis[0] + lis[1] + lis[2]
+
+    def __eq__(self, other: object) -> bool:
+        if(isinstance(other,Triangle)):
+            return self.point_set == other.point_set
+        else:
+            raise Exception("The Type must be Triangle")
     
     def __str__(self):
         return 'Triangle with line:{a},{b},{c}'.format(a=self.la.get_name(), b=self.lb.get_name(), c=self.lc.get_name())
@@ -123,6 +139,26 @@ class Quad:
         self.lb = lb
         self.lc = lc
         self.ld = ld
+        self.point_set = set()
+        self.point_set.add(self.la.a.get_name())
+        self.point_set.add(self.la.b.get_name())
+        self.point_set.add(self.lb.a.get_name())
+        self.point_set.add(self.lb.b.get_name())
+        self.point_set.add(self.lc.a.get_name())
+        self.point_set.add(self.lc.b.get_name())
+        self.point_set.add(self.ld.a.get_name())
+        self.point_set.add(self.ld.b.get_name())
+
+    def get_name(self) -> str: # just for UnionFind
+        lis = list(self.point_set)
+        lis.sort()
+        return lis[0] + lis[1] + lis[2] + lis[3]
+
+    def __eq__(self, other: object) -> bool:
+        if(isinstance(other,Quad)):
+            return self.point_set == other.point_set
+        else:
+            raise Exception("The Type must be Quad")
     
     def __str__(self):
         return 'Quad with line:{a},{b},{c},{d}'.format(a=self.la.get_name(), b=self.lb.get_name(), c=self.lc.get_name(), d=self.ld.get_name())
