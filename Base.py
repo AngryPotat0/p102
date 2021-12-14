@@ -1,6 +1,8 @@
 from os import SEEK_CUR, name, set_inheritable
 from typing import Tuple
-
+import math
+from typing import List
+# from Gen_angle import *
 
 class Point:
     def __init__(self,name: str,x: float,y: float) -> None:
@@ -22,6 +24,9 @@ class Point:
                 return False
         else:
             raise Exception("The Type must be Point")
+    
+    def __hash__(self) -> int: #FIXME: 正确性无法保证
+        return hash("Point" + self.name)
 
 class Line:
     def __init__(self,a: Point,b: Point) -> None:
@@ -100,10 +105,60 @@ class Angle:
         self.lb = lb
 
     def get_name(self) -> str: # just for UnionFind
-        return self.la.get_name() + "-" + self.lb.get_name()
+        return "<" + self.la.get_name() + ", " + self.lb.get_name() + ">"
     
     def __str__(self) -> str:
         return 'Angle with line:{a},{b}'.format(a=self.la.get_name(), b=self.lb.get_name())
+
+#TODO: 把这些代码移到其他地方去
+
+pi = 3.14159265358979324
+
+def gen_angle(point_a: Point, point_b: Point, mid_point: Point,x: float,y: float,R: float) -> Angle: #FIXME:
+    def get_length(a: Point, b: Point):
+        return math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
+
+    x1,y1 = point_a.x, point_a.y
+    x2,y2 = point_b.x, point_b.y
+    # mid_name = mid_point.name
+
+    a = get_length(point_b, mid_point)
+    b = get_length(point_a, mid_point)
+    c = get_length(point_a, point_b)
+    angleC = math.acos((a * a + b * b - c * c) / (2 * a * b))
+    angleC = abs((angleC * 180) / pi)
+
+    
+    t = math.acos(((x1 - x) * (x2 - x) + (y1 - y) * (y2 - y)) / (R * R));
+    if((x1 - x) * (y2 - y) - (x2 - x) * (y1 - y) < 0.0) : t += pi;
+    t = (t * 180) / pi
+    a = Angle(Line(point_a,mid_point),Line(point_b,mid_point))
+    b = Angle(Line(point_b,mid_point),Line(point_a,mid_point))
+    if(angleC > 90):
+        a, b = b, a
+    if(t < 180):
+        return a
+    return b
+
+def gen_angle_for_triangle(point_list: List[Point]) -> dict:
+    a = 2 * (point_list[1].x - point_list[0].x)
+    b = 2 * (point_list[1].y - point_list[0].y)
+    c = point_list[1].x * point_list[1].x + point_list[1].y * point_list[1].y - point_list[0].x * point_list[0].x - point_list[0].y * point_list[0].y
+    d = 2 * (point_list[2].x - point_list[1].x)
+    e = 2 * (point_list[2].y - point_list[1].y)
+    f = point_list[2].x * point_list[2].x + point_list[2].y * point_list[2].y - point_list[1].x * point_list[1].x - point_list[1].y * point_list[1].y
+    x = (b * f - e * c) / (b * d - e * a)
+    y = (d * c - a * f) / (b * d - e * a)
+    R = math.sqrt((x - point_list[0].x) ** 2 + (y - point_list[0].y) ** 2)
+
+    # print("circle:{a},{b},{c}".format(a=x,b=y,c=R))
+
+    angle_pair = dict()
+    angle_pair[point_list[2].get_name()] = gen_angle(point_list[0],point_list[1],point_list[2],x,y,R)
+    angle_pair[point_list[1].get_name()] = gen_angle(point_list[0],point_list[2],point_list[1],x,y,R)
+    angle_pair[point_list[0].get_name()] = gen_angle(point_list[1],point_list[2],point_list[0],x,y,R)
+
+    return angle_pair
 
 class Triangle:
     def __init__(self,la: Line,lb: Line,lc: Line) -> None:
@@ -111,18 +166,21 @@ class Triangle:
         self.lb = lb
         self.lc = lc
         self.point_set = set()
-        self.point_set.add(self.la.a.get_name())
-        self.point_set.add(self.la.b.get_name())
-        self.point_set.add(self.lb.a.get_name())
-        self.point_set.add(self.lb.b.get_name())
-        self.point_set.add(self.lc.a.get_name())
-        self.point_set.add(self.lc.b.get_name())
+        self.point_set.add(self.la.a)
+        self.point_set.add(self.la.b)
+        self.point_set.add(self.lb.a)
+        self.point_set.add(self.lb.b)
+        self.point_set.add(self.lc.a)
+        self.point_set.add(self.lc.b)
         # print("Triangle test: ",self.get_name())
-    
-    def get_name(self) -> str: # just for UnionFind
         lis = list(self.point_set)
+        lis = [lis[0].get_name(), lis[1].get_name(), lis[2].get_name()]
         lis.sort()
-        return lis[0] + lis[1] + lis[2]
+        self.name = lis[0] + lis[1] + lis[2]
+        self.angle_dict = gen_angle_for_triangle(list(self.point_set))
+    
+    def get_name(self) -> str:
+        return self.name
 
     def __eq__(self, other: object) -> bool:
         if(isinstance(other,Triangle)):
@@ -131,7 +189,7 @@ class Triangle:
             raise Exception("The Type must be Triangle")
     
     def __str__(self):
-        return 'Triangle with line:{a},{b},{c}'.format(a=self.la.get_name(), b=self.lb.get_name(), c=self.lc.get_name())
+        return 'Triangle {name}'.format(name = self.name)
 
 class Quad:
     def __init__(self,la: Line,lb: Line,lc: Line,ld: Line) -> None:
@@ -140,19 +198,22 @@ class Quad:
         self.lc = lc
         self.ld = ld
         self.point_set = set()
-        self.point_set.add(self.la.a.get_name())
-        self.point_set.add(self.la.b.get_name())
-        self.point_set.add(self.lb.a.get_name())
-        self.point_set.add(self.lb.b.get_name())
-        self.point_set.add(self.lc.a.get_name())
-        self.point_set.add(self.lc.b.get_name())
-        self.point_set.add(self.ld.a.get_name())
-        self.point_set.add(self.ld.b.get_name())
+        self.point_set.add(self.la.a)
+        self.point_set.add(self.la.b)
+        self.point_set.add(self.lb.a)
+        self.point_set.add(self.lb.b)
+        self.point_set.add(self.lc.a)
+        self.point_set.add(self.lc.b)
+        self.point_set.add(self.ld.a)
+        self.point_set.add(self.ld.b)
+
+        lis = list(self.point_set)
+        lis = [lis[0].get_name(), lis[1].get_name(), lis[2].get_name(), lis[3].get_name()]
+        lis.sort()
+        self.name = lis[0] + lis[1] + lis[2] + lis[3]
 
     def get_name(self) -> str: # just for UnionFind
-        lis = list(self.point_set)
-        lis.sort()
-        return lis[0] + lis[1] + lis[2] + lis[3]
+        return self.name
 
     def __eq__(self, other: object) -> bool:
         if(isinstance(other,Quad)):
@@ -161,8 +222,9 @@ class Quad:
             raise Exception("The Type must be Quad")
     
     def __str__(self):
-        return 'Quad with line:{a},{b},{c},{d}'.format(a=self.la.get_name(), b=self.lb.get_name(), c=self.lc.get_name(), d=self.ld.get_name())
+        return 'Quad :{name}'.format(name = self.get_name())
 
 class Relation:
-    def __init__(self,val) -> None:
-        self.val = val
+    def __init__(self, type: str, values: List[str]) -> None:
+        self.type = type
+        self.values = values

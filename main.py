@@ -33,3 +33,9 @@ for triangle in graph.triangle_list:
     print(triangle)
 for quad in graph.quad_list:
     print(quad)
+
+for triangle in graph.triangle_list:
+    print(triangle)
+    print("angles:")
+    for k in triangle.angle_dict.keys():
+        print("    {name}: {l}".format(name=k,l=triangle.angle_dict[k].get_name()))
