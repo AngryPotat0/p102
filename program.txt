@@ -3,3 +3,6 @@ point c(2,2),d(0,2),e(1,1)
 line ab,bc,cd,ad,ac,bd
 ponl e,ac
 ponl e,bd
+
+paral abcd
+prof eqa dac,cab

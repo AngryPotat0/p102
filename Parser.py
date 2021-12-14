@@ -1,11 +1,13 @@
 from Lexer import *
 from Base import *
 from Info import *
+from Infer import *
 
 class Parser:
     def __init__(self,lex) -> None:
         self.lex = lex
         self.graph_info = None
+        self.infer = Infer()
         self.point_check = dict()
         self.line_check = dict()
         # self.info = Info()
@@ -54,18 +56,21 @@ class Parser:
                 for p in points:
                     ponl_list.append(Ponl(self.point_check[p],self.line_check[line]))
             elif(self.currentToken.type == TokenType.PROF):
-                # self.prof()
-                print("not ready yet")
+                relation = self.prof()
+                self.infer.targets.append(relation)
             elif(self.currentToken.value in relation_keywords()):
-                # rlt = self.relation()
-                # print(rlt)
-                print("not ready yet")
+                relation = self.relation()
+                self.infer.relations.append(relation)
+                # print("not ready yet")
             else:
                 self.error()
         self.graph_info = GraphInfo(point_list,line_list,ponl_list)
     
     def get_graph_info(self) -> GraphInfo:
         return self.graph_info
+
+    def get_infer(self) -> Infer:
+        return self.infer
 
     # def get_info(self) -> Info:
     #     return self.info
@@ -129,7 +134,7 @@ class Parser:
             name = self.currentToken.value
             self.eat(TokenType.ID)
             lis.append(name)
-        return Relation((tp,lis))
+        return Relation(tp,lis)
 
     def prof(self):
         self.eat(TokenType.PROF)

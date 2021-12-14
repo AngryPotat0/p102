@@ -228,3 +228,9 @@ class Relation:
     def __init__(self, type: str, values: List[str]) -> None:
         self.type = type
         self.values = values
+
+    def __str__(self) -> str:
+        lis = ""
+        for value in self.values:
+            lis = lis + value + " "
+        return "{t} with {lis}".format(t=self.type,lis=lis)
