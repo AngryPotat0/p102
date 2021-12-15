@@ -53,3 +53,7 @@ class UnionFind(object):
             self.uf[n].parent = self.uf[self.uf[n].parent].parent
             n = self.uf[n].parent
         return n
+    
+    def find_base(self, name: str) -> Element:
+        p = self.find(name)
+        return self.uf[p]

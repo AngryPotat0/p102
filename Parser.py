@@ -124,7 +124,7 @@ class Parser:
 
     def relation(self):
         lis = []
-        tp = self.currentToken.type
+        tp = self.currentToken.value
         self.eat(self.currentToken.type)
         name = self.currentToken.value
         self.eat(TokenType.ID)

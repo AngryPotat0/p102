@@ -19,6 +19,7 @@ par.parse()
 graph = par.get_graph_info()
 infer = par.get_infer()
 infer.set_info(graph)
+infer.init_before_run()
 
 # info = par.get_info()
 
@@ -29,10 +30,10 @@ infer.set_info(graph)
 # for ponl in graph.ponl_list:
 #     print(ponl)
 
-# for l in graph.line_list:
-#     print(l)
+for l in graph.line_list:
+    print(l)
 
-# graph.info.get_col_lines()
+graph.info.get_col_lines()
 # for triangle in graph.triangle_list:
 #     print(triangle)
 # for quad in graph.quad_list:
@@ -44,10 +45,10 @@ infer.set_info(graph)
 #     for k in triangle.angle_dict.keys():
 #         print("    {name}: {l}".format(name=k,l=triangle.angle_dict[k].get_name()))
 
-# for relation in infer.relations:
-#     print(relation)
+for relation in infer.relations:
+    print(relation)
 
-# print("target:")
+print("target:")
 
-# for target in infer.targets:
-#     print(target)
+for target in infer.targets:
+    print(target)

@@ -160,6 +160,19 @@ def gen_angle_for_triangle(point_list: List[Point]) -> dict:
 
     return angle_pair
 
+def gen_angle_for_angle(point_list: List[Point]) -> Angle:
+    a = 2 * (point_list[1].x - point_list[0].x)
+    b = 2 * (point_list[1].y - point_list[0].y)
+    c = point_list[1].x * point_list[1].x + point_list[1].y * point_list[1].y - point_list[0].x * point_list[0].x - point_list[0].y * point_list[0].y
+    d = 2 * (point_list[2].x - point_list[1].x)
+    e = 2 * (point_list[2].y - point_list[1].y)
+    f = point_list[2].x * point_list[2].x + point_list[2].y * point_list[2].y - point_list[1].x * point_list[1].x - point_list[1].y * point_list[1].y
+    x = (b * f - e * c) / (b * d - e * a)
+    y = (d * c - a * f) / (b * d - e * a)
+    R = math.sqrt((x - point_list[0].x) ** 2 + (y - point_list[0].y) ** 2)
+
+    return gen_angle(point_list[0],point_list[2],point_list[1],x,y,R)
+
 class Triangle:
     def __init__(self,la: Line,lb: Line,lc: Line) -> None:
         self.la = la

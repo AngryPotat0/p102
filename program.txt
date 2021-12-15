@@ -1,8 +1,8 @@
-point a(0,0),b(2,0)
-point c(2,2),d(0,2),e(1,1)
+point a(0,0),b(4,0)
+point c(4,2),d(0,2),e(2,1)
 line ab,bc,cd,ad,ac,bd
 ponl e,ac
 ponl e,bd
 
-paral abcd
-prof eqa dac,cab
+eqa dac,dce,cbe
+eqa dec,aeb
