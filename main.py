@@ -1,3 +1,4 @@
+from os import get_terminal_size
 from Info import *
 from Token import *
 from Lexer import *
@@ -21,6 +22,14 @@ infer = par.get_infer()
 infer.set_info(graph)
 infer.init_before_run()
 
+# graph.info.show_col_lines()
+# graph.info.show_union_find(graph.info.con_line)
+# graph.info.show_union_find(graph.info.equ_angles)
+graph.info.show_union_find(graph.info.equ_lines,"equ_lines:")
+graph.info.show_union_find(graph.info.para_lines,"para_lines:")
+# for k in graph.angle_find.keys():
+#     print(k,graph.angle_find[k])
+
 # info = par.get_info()
 
 # graph.gen_lines()
@@ -30,10 +39,10 @@ infer.init_before_run()
 # for ponl in graph.ponl_list:
 #     print(ponl)
 
-for l in graph.line_list:
-    print(l)
+# for l in graph.line_list:
+#     print(l)
 
-graph.info.get_col_lines()
+# graph.info.get_col_lines()
 # for triangle in graph.triangle_list:
 #     print(triangle)
 # for quad in graph.quad_list:
@@ -45,10 +54,10 @@ graph.info.get_col_lines()
 #     for k in triangle.angle_dict.keys():
 #         print("    {name}: {l}".format(name=k,l=triangle.angle_dict[k].get_name()))
 
-for relation in infer.relations:
-    print(relation)
+# for relation in infer.relations:
+#     print(relation)
 
-print("target:")
+# print("target:")
 
-for target in infer.targets:
-    print(target)
+# for target in infer.targets:
+#     print(target)

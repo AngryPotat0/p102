@@ -1,8 +1,6 @@
-point a(0,0),b(4,0)
-point c(4,2),d(0,2),e(2,1)
-line ab,bc,cd,ad,ac,bd
-ponl e,ac
+point a(0,0),b(4,0),c(4,4),d(0,4),e(2,2)
+line ab,bc,cd,ad,bd,ac
 ponl e,bd
+ponl e,ac
 
-eqa dac,dce,cbe
-eqa dec,aeb
+squr abcd

@@ -190,7 +190,7 @@ class Triangle:
         lis = [lis[0].get_name(), lis[1].get_name(), lis[2].get_name()]
         lis.sort()
         self.name = lis[0] + lis[1] + lis[2]
-        self.angle_dict = gen_angle_for_triangle(list(self.point_set))
+        self.angle_dict = gen_angle_for_triangle(list(self.point_set)) #name: Angle
     
     def get_name(self) -> str:
         return self.name
@@ -219,11 +219,36 @@ class Quad:
         self.point_set.add(self.lc.b)
         self.point_set.add(self.ld.a)
         self.point_set.add(self.ld.b)
-
+        
         lis = list(self.point_set)
         lis = [lis[0].get_name(), lis[1].get_name(), lis[2].get_name(), lis[3].get_name()]
         lis.sort()
         self.name = lis[0] + lis[1] + lis[2] + lis[3]
+
+        self.other_line = dict() #line_name : line_name   改名叫face_line之类的挺不错的，但是不想动了
+        self.init_other_line()
+
+    def init_other_line(self):
+        def no_same_point(la: Line, lb: Line) -> bool:
+            point_set = set()
+            point_set.add(la.a.get_name())
+            point_set.add(la.b.get_name())
+            point_set.add(lb.a.get_name())
+            point_set.add(lb.b.get_name())
+            return len(point_set) == 4
+        line_list = [self.la, self.lb, self.lc, self.ld]
+        for i in range(0,len(line_list)):
+            for j in range(i + 1,len(line_list)):
+                if(line_list[i].get_name() in self.other_line): continue
+                # print("with line: {a} and line: {b}".format(a=line_list[i].get_name(),b=line_list[j].get_name()))
+                if(no_same_point(line_list[i],line_list[j])):
+                    # print("YES")
+                    self.other_line[line_list[i].get_name()] = line_list[j].get_name()
+                    self.other_line[line_list[j].get_name()] = line_list[i].get_name()
+        # only for debug:
+        # print("init_other_line for Quad {name}".format(name = self.name))
+        # for k in self.other_line:
+        #     print(k,self.other_line[k])
 
     def get_name(self) -> str: # just for UnionFind
         return self.name
