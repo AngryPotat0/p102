@@ -93,7 +93,30 @@ class Infer:
                     base_line_b_name = self.graph_info.info.con_line.find_base(relation.values[i + 1]).data.get_name()
                     self.graph_info.info.para_lines.union(base_line_a_name, base_line_b_name)
             elif(relation_type == 'simtri'): #相似，列表中的三角形互相相似，添加角相等, 问题:相似的三角形中存在特殊三角形怎么办
-                pass
+                #方法：在关系列表中，三角形名字为相似/全等序，我们生成角相等和线相等等信息，然后以字母序存储相似/全等情况
+                for i in range(0,len(relation.values) - 1):
+                    triangle_name_a = relation.values[i]
+                    triangle_name_b = relation.values[i + 1]
+                    name_a = sorted([triangle_name_a[0], triangle_name_a[1], triangle_name_a[2]])
+                    name_a = "".join(name_a)
+                    name_b = sorted([triangle_name_b[0], triangle_name_b[1], triangle_name_b[2]])
+                    name_b = "".join(name_b)
+                    triangle_a = self.graph_info.triangle_find[name_a]
+                    triangle_b = self.graph_info.triangle_find[name_b]
+                    for i in range(0,3):#角相等信息，三角形名字长度为3
+                        angle_a = triangle_a.angle_dict[triangle_name_a[i]]
+                        angle_b = triangle_b.angle_dict[triangle_name_b[i]]
+                        angle_a_base_la = self.graph_info.info.con_line.find_base(angle_a.la.get_name()).data
+                        angle_a_base_lb = self.graph_info.info.con_line.find_base(angle_a.lb.get_name()).data
+                        angle_b_base_la = self.graph_info.info.con_line.find_base(angle_b.la.get_name()).data
+                        angle_b_base_lb = self.graph_info.info.con_line.find_base(angle_b.lb.get_name()).data
+                        base_angle_a = Angle(angle_a_base_la,angle_a_base_lb)
+                        base_angle_b = Angle(angle_b_base_la,angle_b_base_lb)
+                        self.graph_info.info.equ_angles.union(base_angle_a.get_name(), base_angle_b.get_name())
+                        # self.graph_info.info.equ_angles.union(angle_a_name, angle_b_name)
+                    self.graph_info.info.simtri_list.union(triangle_a.get_name(), triangle_b.get_name()) #FIXME: 基本角啊基本角
+                    triangle_a.simtri_name = triangle_name_a
+                    triangle_b.simtri_name = triangle_name_b
             elif(relation_type == 'contri'): #全等，列表中的三角形互相全等，设置角相等和线相等 问题: 全等的三角形中存在特殊三角形怎么办
                 pass
             elif(relation_type == 'perp'):#垂直，元素1垂直于元素2    直角：从直角集中选出一个角，设置这两个角相等 本角加入直角集

@@ -191,6 +191,11 @@ class Triangle:
         lis.sort()
         self.name = lis[0] + lis[1] + lis[2]
         self.angle_dict = gen_angle_for_triangle(list(self.point_set)) #name: Angle
+        # self.base_angle_dict = dict()
+        # self.init_base_angle_dict()#FIXME: 这东西放哪里好一点呢？
+
+        self.simtri_name = ""
+        self.contri_name = ""
     
     def get_name(self) -> str:
         return self.name

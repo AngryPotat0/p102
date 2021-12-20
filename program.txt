@@ -3,4 +3,4 @@ line ab,bc,cd,ad,bd,ac
 ponl e,bd
 ponl e,ac
 
-squr abcd
+simtri aeb,ced
