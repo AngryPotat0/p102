@@ -1,4 +1,3 @@
-from os import SEEK_CUR, name, set_inheritable
 from typing import Tuple
 import math
 from typing import List
@@ -233,6 +232,9 @@ class Quad:
         self.other_line = dict() #line_name : line_name   改名叫face_line之类的挺不错的，但是不想动了
         self.init_other_line()
 
+        self.angle_dict = dict()
+        self.init_angle_dict()
+
     def init_other_line(self):
         def no_same_point(la: Line, lb: Line) -> bool:
             point_set = set()
@@ -254,6 +256,32 @@ class Quad:
         # print("init_other_line for Quad {name}".format(name = self.name))
         # for k in self.other_line:
         #     print(k,self.other_line[k])
+
+    def init_angle_dict(self):
+        def get_angle(line_a: Line, line_b: Line) -> Tuple[Point]:
+            side_point = set()
+            mid_point = list()
+            for point in [line_a.a,line_a.b,line_b.a,line_b.b]:
+                if(point not in side_point):
+                    side_point.add(point)
+                else:
+                    mid_point.append(point)
+                    side_point.remove(point)
+            if(len(mid_point) != 0):
+                side_point = list(side_point)
+                return (side_point[0],mid_point[0],side_point[1])
+            return None
+        line_list = [self.la,self.lb,self.lc,self.ld]
+        for i in range(0,len(line_list)):
+            for j in range(i + 1,len(line_list)):
+                point_tuple = get_angle(line_list[i],line_list[j])
+                if(point_tuple == None or point_tuple[1].get_name() in self.angle_dict): continue
+                self.angle_dict[point_tuple[1].get_name()] = gen_angle_for_angle(list(point_tuple))
+        #debug:
+        # print("Quad {name} angle_dict:".format(name=self.name))
+        # for k in self.angle_dict.keys():
+        #     print(k,self.angle_dict[k].get_name())
+
 
     def get_name(self) -> str: # just for UnionFind
         return self.name
