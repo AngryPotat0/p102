@@ -118,7 +118,31 @@ class Infer:
                     triangle_a.simtri_name = triangle_name_a
                     triangle_b.simtri_name = triangle_name_b
             elif(relation_type == 'contri'): #全等，列表中的三角形互相全等，设置角相等和线相等 问题: 全等的三角形中存在特殊三角形怎么办
-                pass
+                for i in range(0,len(relation.values) - 1):
+                    triangle_name_a = relation.values[i]
+                    triangle_name_b = relation.values[i + 1]
+                    name_a = "".join(sorted([triangle_name_a[0], triangle_name_a[1], triangle_name_a[2]]))
+                    name_b = "".join(sorted([triangle_name_b[0], triangle_name_b[1], triangle_name_b[2]]))
+                    triangle_a = self.graph_info.triangle_find[name_a]
+                    triangle_b = self.graph_info.triangle_find[name_b]
+                    for i in range(0,3):
+                        #设置等角
+                        angle_a = triangle_a.angle_dict[triangle_name_a[i]]
+                        angle_b = triangle_b.angle_dict[triangle_name_b[i]]
+                        angle_a_base_la = self.graph_info.info.con_line.find_base(angle_a.la.get_name()).data
+                        angle_a_base_lb = self.graph_info.info.con_line.find_base(angle_a.lb.get_name()).data
+                        angle_b_base_la = self.graph_info.info.con_line.find_base(angle_b.la.get_name()).data
+                        angle_b_base_lb = self.graph_info.info.con_line.find_base(angle_b.lb.get_name()).data
+                        base_angle_a = Angle(angle_a_base_la,angle_a_base_lb)
+                        base_angle_b = Angle(angle_b_base_la,angle_b_base_lb)
+                        self.graph_info.info.equ_angles.union(base_angle_a.get_name(), base_angle_b.get_name())
+                        #设置等长
+                        line_a_name = "".join(sorted([triangle_name_a[i], triangle_name_a[(i + 1) % 3]]))
+                        line_b_name = "".join(sorted([triangle_name_b[i], triangle_name_b[(i + 1) % 3]]))
+                        self.graph_info.info.equ_lines.union(line_a_name,line_b_name)
+                    self.graph_info.info.contri_list.union(name_a, name_b)
+                    triangle_a.contri_name = triangle_name_a
+                    triangle_b.contri_name = triangle_name_b
             elif(relation_type == 'perp'):#垂直，元素1垂直于元素2    直角：从直角集中选出一个角，设置这两个角相等 本角加入直角集
                 line_a = self.graph_info.info.con_line.find_base(relation.values[0]).data
                 line_b = self.graph_info.info.con_line.find_base(relation.values[1]).data
