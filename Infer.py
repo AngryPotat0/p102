@@ -88,10 +88,37 @@ class Infer:
                     line_b_name = relation.values[i + 1]
                     self.graph_info.info.equ_lines.union(line_a_name, line_b_name)
             elif(relation_type == 'para'): #平行，列表中的线互相平行  平行线相关角相等   三线平行？
+                para_line_list = set()
                 for i in range(0,len(relation.values) - 1):
-                    base_line_a_name = self.graph_info.info.con_line.find_base(relation.values[i]).data.get_name()  #找出基准线
-                    base_line_b_name = self.graph_info.info.con_line.find_base(relation.values[i + 1]).data.get_name()
-                    self.graph_info.info.para_lines.union(base_line_a_name, base_line_b_name)
+                    base_line_a = self.graph_info.info.con_line.find_base(relation.values[i]).data  #找出基准线
+                    base_line_b = self.graph_info.info.con_line.find_base(relation.values[i + 1]).data
+                    para_line_list.add(base_line_a)
+                    para_line_list.add(base_line_b)
+                    self.graph_info.info.para_lines.union(base_line_a.get_name(), base_line_b.get_name())
+                #平行后设置角相等,干脆把其他所有线都加进去算了，反正平行的那些也没关系
+                cross_line_list = list()
+                uf = self.graph_info.info.con_line.get_uf()
+                # print("Scan::")
+                for i in range(0,len(uf)):
+                    element = uf[i]
+                    # print(element.data.get_name(),end=" ")
+                    if(element.parent != i): continue
+                    line = element.data
+                    if(line in para_line_list): continue
+                    cross_line_list.append(line)
+                # print("cross_line_list:")
+                # [print(line.get_name(),end=" ") for line in cross_line_list]
+
+                for cross_line in cross_line_list:
+                    angle_list_a = list()
+                    angle_list_b = list()
+                    for para_line in para_line_list:
+                        angle_list_a.append(Angle(cross_line,para_line))
+                        angle_list_b.append(Angle(para_line,cross_line))
+                    for i in range(0,len(angle_list_a) - 1):
+                        self.graph_info.info.equ_angles.union(angle_list_a[i].get_name(), angle_list_a[i + 1].get_name())
+                        self.graph_info.info.equ_angles.union(angle_list_b[i].get_name(), angle_list_b[i + 1].get_name())
+                    
             elif(relation_type == 'simtri'): #相似，列表中的三角形互相相似，添加角相等, 问题:相似的三角形中存在特殊三角形怎么办
                 #方法：在关系列表中，三角形名字为相似/全等序，我们生成角相等和线相等等信息，然后以字母序存储相似/全等情况
                 for i in range(0,len(relation.values) - 1):
