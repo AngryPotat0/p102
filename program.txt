@@ -3,3 +3,4 @@ line ab,bc,cd,ad,bd,ac
 ponl e,bd
 ponl e,ac
 para cd,ab
+prof eqa cda,eba

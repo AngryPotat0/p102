@@ -76,7 +76,9 @@ class Infer:
                 for angle_name in relation.values:
                     angle = self.graph_info.angle_find[angle_name]
                     reversed_angle = Angle(angle.la, angle.lb)
-                    self.graph_info.info.equ_angles.union(angle, reversed_angle)
+                    self.graph_info.info.equ_angles.union(angle_name,reversed_angle.get_name())
+                    self.graph_info.info.rang_list.add(angle_name)
+                    self.graph_info.info.rang_list.add(reversed_angle.get_name())# 加入特殊图形集合
             elif(relation_type == 'eqa'):#等角，列表中的角相等
                 for i in range(0,len(relation.values) - 1):
                     angle_a_name = relation.values[i]
@@ -141,7 +143,8 @@ class Infer:
                         base_angle_b = Angle(angle_b_base_la,angle_b_base_lb)
                         self.graph_info.info.equ_angles.union(base_angle_a.get_name(), base_angle_b.get_name())
                         # self.graph_info.info.equ_angles.union(angle_a_name, angle_b_name)
-                    self.graph_info.info.simtri_list.union(triangle_a.get_name(), triangle_b.get_name()) #FIXME: 基本角啊基本角
+                    #设置相似时使用基本名
+                    self.graph_info.info.simtri_list.union(triangle_a.get_name(), triangle_b.get_name())
                     triangle_a.simtri_name = triangle_name_a
                     triangle_b.simtri_name = triangle_name_b
             elif(relation_type == 'contri'): #全等，列表中的三角形互相全等，设置角相等和线相等 问题: 全等的三角形中存在特殊三角形怎么办
@@ -167,6 +170,7 @@ class Infer:
                         line_a_name = "".join(sorted([triangle_name_a[i], triangle_name_a[(i + 1) % 3]]))
                         line_b_name = "".join(sorted([triangle_name_b[i], triangle_name_b[(i + 1) % 3]]))
                         self.graph_info.info.equ_lines.union(line_a_name,line_b_name)
+                    #设置全等关系时使用基本名
                     self.graph_info.info.contri_list.union(name_a, name_b)
                     triangle_a.contri_name = triangle_name_a
                     triangle_b.contri_name = triangle_name_b
@@ -185,6 +189,61 @@ class Infer:
                 line_b = line_b_lis[0] + line_b_lis[1]
                 self.graph_info.info.equ_lines.union(line_a, line_b)
 
+    def check_relation(self, target_list: List[Relation]) -> None:
+        ans = True
+        for relation in target_list:
+            relation_type = relation.type
+            if(relation_type == 'eqtri'):
+                for triangle_name in relation.values:
+                    if(triangle_name not in self.graph_info.info.eqtri_list):
+                        ans = False
+            elif(relation_type == 'paral'):
+                for quad_name in relation.values:
+                    if(quad_name not in self.graph_info.info.paral_list):
+                        ans = False
+            elif(relation_type == 'rect'):
+                pass
+            elif(relation_type == 'rhom'):
+                pass
+            elif(relation_type == 'squr'):
+                pass
+            elif(relation_type == 'rang'):
+                for angle_name in relation.values:
+                    if(angle_name not in self.graph_info.info.rang_list):
+                        ans = False
+            elif(relation_type == 'eqa'): # 等角
+                for i in range(0,len(relation.values) - 1):
+                    angle_name_a = relation.values[i]
+                    angle_name_b = relation.values[i + 1]
+                    ans = self.graph_info.info.equ_angles.connected(angle_name_a,angle_name_b)
+            elif(relation_type == 'cong'):# 等长
+                for i in range(0,len(relation.values) - 1):
+                    line_name_a = relation.values[i]
+                    line_name_b = relation.values[i + 1]
+                    ans = self.graph_info.info.equ_lines.connected(line_name_a, line_name_b)
+            elif(relation_type == 'para'):# 平行
+                for i in range(0,len(relation.values) - 1):
+                    line_a_name = self.graph_info.info.con_line.find_base(relation.values[i]).data.get_name()
+                    line_b_name = self.graph_info.info.con_line.find_base(relation.values[i + 1]).data.get_name()
+                    ans = self.graph_info.info.para_lines.connected(line_a_name,line_b_name)
+            elif(relation_type == 'simtri'):
+                for i in range(0,len(relation.values) - 1):
+                    triangle_name_a = relation.values[i]
+                    triangle_name_b = relation.values[i + 1]
+                    ans = self.graph_info.info.simtri_list.connected(triangle_name_a,triangle_name_b)
+            elif(relation_type == 'contri'):
+                for i in range(0,len(relation.values) - 1):
+                    triangle_name_a = relation.values[i]
+                    triangle_name_b = relation.values[i + 1]
+                    ans = self.graph_info.info.contri_list.connected(triangle_name_a,triangle_name_b)
+        return ans
+
 
     def run(self):
-        pass
+        print("开始运行")
+        self.set_relation(self.relations)
+        ans = self.check_relation(self.targets)
+        if(ans):
+            print("证明成功")
+        else:
+            print("证明失败")
