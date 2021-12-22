@@ -25,7 +25,7 @@ class TokenType(Enum):
     RECT =              'rect'
     RHOM =              'rhom'
     SQUR =              'squr'
-    PROF =              'prof'
+    PROVE =             'prove'
     EOF =               'EOF'
 
 class Token():
@@ -49,7 +49,7 @@ def reserved_keywords():
 def relation_keywords():
     token_list = list(TokenType)
     start = token_list.index(TokenType.EQA)
-    end = token_list.index(TokenType.PROF)
+    end = token_list.index(TokenType.PROVE)
     relation_keywords = [
         token_type.value
         for token_type in token_list[start:end]

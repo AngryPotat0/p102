@@ -55,7 +55,7 @@ class Parser:
                 line = lis[-1]
                 for p in points:
                     ponl_list.append(Ponl(self.point_check[p],self.line_check[line]))
-            elif(self.currentToken.type == TokenType.PROF):
+            elif(self.currentToken.type == TokenType.PROVE):
                 relation = self.prof()
                 self.infer.targets.append(relation)
             elif(self.currentToken.value in relation_keywords()):
@@ -137,7 +137,7 @@ class Parser:
         return Relation(tp,lis)
 
     def prof(self):
-        self.eat(TokenType.PROF)
+        self.eat(TokenType.PROVE)
         rlt = self.relation()
         return rlt
 
