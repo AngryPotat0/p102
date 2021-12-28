@@ -118,7 +118,7 @@ class Infer:
             elif(relation_type == 'rang'):#直角，设置角和它的反角相等
                 for angle_name in relation.values:
                     angle = self.graph_info.angle_find[angle_name]
-                    reversed_angle = Angle(angle.la, angle.lb)
+                    reversed_angle = Angle(angle.lb, angle.la)
                     self.graph_info.info.equ_angles.union(angle_name,reversed_angle.get_name())
                     self.graph_info.info.rang_list.add(angle_name)
                     self.graph_info.info.rang_list.add(reversed_angle.get_name())# 加入特殊图形集合
@@ -320,10 +320,17 @@ class Infer:
             return
         self.new_relations.append(relation)
 
-    def is_squr(self, quad: Quad) -> bool:
+    def is_squr(self, quad: Quad) -> bool: #这简直就是搞笑的
+        # 有一组邻边相等且一个角是直角的平行四边形是正方形.
+        # 有一组邻边相等的矩形是正方形.
+        # 对角线互相垂直的矩形是正方形.
+        # 有一个角为直角的菱形是正方形.
+        # 对角线相等的菱形是正方形.
+        # ......
         if(quad.get_name() in self.graph_info.info.squar_list): return False
         la, lb, lc, ld = quad.la, quad.lb, quad.lc, quad.ld
         ret = False
+        # 四边相等的四边形一定是菱形,但不一定是正方形啊!!!!!!!!!
         ret = (self.graph_info.info.equ_lines.connected(la.get_name(),lb.get_name())
                     and self.graph_info.info.equ_lines.connected(lb.get_name(),lc.get_name())
                     and self.graph_info.info.equ_lines.connected(lc.get_name(),ld.get_name())
@@ -333,4 +340,3 @@ class Infer:
     def is_paral(self, quad: Quad) -> bool:
         if(quad.get_name() in self.graph_info.info.paral_list): return False
         #对边平行，相等
-        
