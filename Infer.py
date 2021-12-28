@@ -94,6 +94,7 @@ class Infer:
             elif(relation_type == 'squr'): #正方形，对边平行，四边相等，四个角为直角
                 for squr_name in relation.values:
                     squr = self.graph_info.quad_find[squr_name]
+                    self.graph_info.info.squar_list.add(squr_name)
                     check_set = set()
                     for k in squr.other_line:
                         line_a, line_b = k, squr.other_line[k]
@@ -104,14 +105,14 @@ class Infer:
                         check_set.add(line_a)
                         check_set.add(line_b)
                     # self.new_relations.append(Relation('cong',squr.la.get_name(),squr.lb.get_name(),squr.lc.get_name(),squr.ld.get_name()))
-                    self.add_new_relations(Relation('cong',squr.la.get_name(),squr.lb.get_name(),squr.lc.get_name(),squr.ld.get_name()))
+                    self.add_new_relations(Relation('cong',[squr.la.get_name(),squr.lb.get_name(),squr.lc.get_name(),squr.ld.get_name()]))
                     #TODO: 四角为直角
                     base_angle_list = list()
                     for k in squr.angle_dict:
                         angle = squr.angle_dict[k]
                         base_line_a = self.graph_info.info.con_line.find_base(squr.angle_dict[k].la.get_name()).data
                         base_line_b = self.graph_info.info.con_line.find_base(squr.angle_dict[k].lb.get_name()).data
-                        base_angle_list.append(Angle(base_angle_a, base_angle_b).get_name())
+                        base_angle_list.append(Angle(base_line_a, base_line_b).get_name())
                     # self.new_relations.append(Relation('rang',base_angle_list))
                     self.add_new_relations(Relation('rang',base_angle_list))
             elif(relation_type == 'rang'):#直角，设置角和它的反角相等
@@ -234,6 +235,10 @@ class Infer:
                 line_b = line_b_lis[0] + line_b_lis[1]
                 self.graph_info.info.equ_lines.union(line_a, line_b)
 
+    def gen_relation(self) -> None:
+        for quad in self.graph_info.quad_list:
+            if(self.is_squr(quad)): self.add_new_relations(Relation('squr',[quad.get_name()]))
+
     def check_relation(self, target_list: List[Relation]) -> None:
         ans = True
         for relation in target_list:
@@ -251,7 +256,9 @@ class Infer:
             elif(relation_type == 'rhom'):
                 pass
             elif(relation_type == 'squr'):
-                pass
+                for quad_name in relation.values:
+                    if(quad_name not in self.graph_info.info.squar_list):
+                        ans = False
             elif(relation_type == 'rang'):
                 for angle_name in relation.values:
                     if(angle_name not in self.graph_info.info.rang_list):
@@ -293,7 +300,9 @@ class Infer:
             print("count:{v}".format(v=count))
             self.show_relations(self.relations)
             self.set_relation(self.relations)
+            self.gen_relation()
             ans = self.check_relation(self.targets)
+            # print("ANS::",ans)
             if(ans):
                 print("证明成功")
                 flag = False
@@ -310,3 +319,18 @@ class Infer:
         if(self.check_relation([relation])):
             return
         self.new_relations.append(relation)
+
+    def is_squr(self, quad: Quad) -> bool:
+        if(quad.get_name() in self.graph_info.info.squar_list): return False
+        la, lb, lc, ld = quad.la, quad.lb, quad.lc, quad.ld
+        ret = False
+        ret = (self.graph_info.info.equ_lines.connected(la.get_name(),lb.get_name())
+                    and self.graph_info.info.equ_lines.connected(lb.get_name(),lc.get_name())
+                    and self.graph_info.info.equ_lines.connected(lc.get_name(),ld.get_name())
+                )
+        return ret
+    
+    def is_paral(self, quad: Quad) -> bool:
+        if(quad.get_name() in self.graph_info.info.paral_list): return False
+        #对边平行，相等
+        
