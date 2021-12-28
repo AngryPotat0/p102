@@ -12,7 +12,7 @@ class Infer:
     def init_before_run(self) -> None:
         self.prepare_angle(self.relations)
         self.prepare_angle(self.targets)
-        self.set_relation(self.relations)
+        # self.set_relation(self.relations)
 
     def set_info(self,graph_info: GraphInfo) -> None:
         self.graph_info = graph_info
@@ -38,40 +38,72 @@ class Infer:
                 for triangle_name in relation.values: 
                     triangle = self.graph_info.triangle_find[triangle_name]
                     self.graph_info.info.eqtri_list.add(triangle_name)#等边三角形加入set
-                    self.graph_info.info.equ_lines.union(triangle.la.get_name(), triangle.lb.get_name())# 设置三边相等
-                    self.graph_info.info.equ_lines.union(triangle.lc.get_name(), triangle.lb.get_name())
+                    self.new_relations.append(Relation('cong',[triangle.la.get_name(),triangle.lb.get_name(),triangle.lc.get_name()]))
                     angle_list = [triangle.angle_dict[name] for name in triangle.angle_dict.keys()]
-                    self.graph_info.info.equ_angles.union(angle_list[0].get_name(), angle_list[1].get_name())
-                    self.graph_info.info.equ_angles.union(angle_list[2].get_name(), angle_list[1].get_name())
+                    base_angle_list = list()
+                    for angle in angle_list:
+                        line_a, line_b = angle.la, angle.lb
+                        base_line_a = self.graph_info.info.con_line.find_base(line_a.get_name()).data
+                        base_line_b = self.graph_info.info.con_line.find_base(line_b.get_name()).data
+                        base_angle_list.append(Angle(base_line_a, base_angle_b).get_name())
+                    self.new_relations.append(Relation('eqa',base_angle_list))
             elif(relation_type == 'paral'):#平行四边形 对边平行且相等 对角相等  要不要加入特殊图形集合来着？
                 for paral_name in relation.values:
                     paral = self.graph_info.quad_find[paral_name]
+                    self.graph_info.info.paral_list.add(paral_name) #平行四边形加入特殊图形集合
+                    check_set = set()
                     for k in paral.other_line:
+                        print("DEBUG: time",k)
                         line_a, line_b = k, paral.other_line[k]
-                        self.graph_info.info.equ_lines.union(line_a, line_b)
-                        self.graph_info.info.para_lines.union(line_a, line_b)
+                        if(line_a in check_set): continue
+                        print("####",line_a,line_b)
+                        self.new_relations.append(Relation('cong',[line_a, line_b]))
+                        self.new_relations.append(Relation('para',[line_a, line_b]))
+                        check_set.add(line_a)
+                        check_set.add(line_b)
                         #TODO: 对角相等
             elif(relation_type == 'rect'):#长方形，对边平行且相等，四个角为直角
                 for rect_name in relation.values:
                     rect = self.graph_info.quad_find[rect_name]
+                    self.graph_info.info.rect_list.add(rect_name)
+                    check_set = set()
                     for k in rect.other_line:
                         line_a, line_b = k, paral.other_line[k]
-                        self.graph_info.info.equ_lines.union(line_a, line_b)
-                        self.graph_info.info.para_lines.union(line_a, line_b)
-                        #TODO: 直角
+                        if(line_a in check_set): continue
+                        self.new_relations.append(Relation('cong', [line_a, line_b]))
+                        self.new_relations.append(Relation('para', [line_a, line_b]))
+                        check_set.add(line_a)
+                        check_set.add(line_b)
+                    #TODO: 直角
+                    base_angle_list = list()
+                    for k in rect.angle_dict:
+                        angle = rect.angle_dict[k]
+                        base_line_a = self.graph_info.info.con_line.find_base(rect.angle_dict[k].la.get_name()).data
+                        base_line_b = self.graph_info.info.con_line.find_base(rect.angle_dict[k].lb.get_name()).data
+                        base_angle_list.append(Angle(base_angle_a, base_angle_b).get_name())
+                    self.new_relations.append(Relation('rang',base_angle_list))
             elif(relation_type == 'rhom'): #菱形   我看谁用这个条件！！！
                 pass
             elif(relation_type == 'squr'): #正方形，对边平行，四边相等，四个角为直角
                 for squr_name in relation.values:
                     squr = self.graph_info.quad_find[squr_name]
+                    check_set = set()
                     for k in squr.other_line:
                         line_a, line_b = k, squr.other_line[k]
-                        self.graph_info.info.para_lines.union(line_a, line_b)
-                    self.graph_info.info.equ_lines.union(squr.la.get_name(), squr.lb.get_name())
-                    self.graph_info.info.equ_lines.union(squr.lb.get_name(), squr.lc.get_name())
-                    self.graph_info.info.equ_lines.union(squr.lc.get_name(), squr.ld.get_name())
-                    self.graph_info.info.equ_lines.union(squr.la.get_name(), squr.ld.get_name())
-                    #TODO: 四角为直角，特殊图形集合？
+                        # self.graph_info.info.para_lines.union(line_a, line_b)
+                        if(line_a in check_set): continue
+                        self.new_relations.append(Relation('para',[line_a, line_b]))
+                        check_set.add(line_a)
+                        check_set.add(line_b)
+                    self.new_relations.append(Relation('cong',squr.la.get_name(),squr.lb.get_name(),squr.lc.get_name(),squr.ld.get_name()))
+                    #TODO: 四角为直角
+                    base_angle_list = list()
+                    for k in squr.angle_dict:
+                        angle = squr.angle_dict[k]
+                        base_line_a = self.graph_info.info.con_line.find_base(squr.angle_dict[k].la.get_name()).data
+                        base_line_b = self.graph_info.info.con_line.find_base(squr.angle_dict[k].lb.get_name()).data
+                        base_angle_list.append(Angle(base_angle_a, base_angle_b).get_name())
+                    self.new_relations.append(Relation('rang',base_angle_list))
             elif(relation_type == 'rang'):#直角，设置角和它的反角相等
                 for angle_name in relation.values:
                     angle = self.graph_info.angle_find[angle_name]
@@ -108,18 +140,16 @@ class Infer:
                     line = element.data
                     if(line in para_line_list): continue
                     cross_line_list.append(line)
-                # print("cross_line_list:")
-                # [print(line.get_name(),end=" ") for line in cross_line_list]
 
                 for cross_line in cross_line_list:
                     angle_list_a = list()
                     angle_list_b = list()
                     for para_line in para_line_list:
-                        angle_list_a.append(Angle(cross_line,para_line))
-                        angle_list_b.append(Angle(para_line,cross_line))
+                        angle_list_a.append(Angle(cross_line,para_line).get_name())
+                        angle_list_b.append(Angle(para_line,cross_line).get_name())
                     for i in range(0,len(angle_list_a) - 1):
-                        self.graph_info.info.equ_angles.union(angle_list_a[i].get_name(), angle_list_a[i + 1].get_name())
-                        self.graph_info.info.equ_angles.union(angle_list_b[i].get_name(), angle_list_b[i + 1].get_name())
+                        self.new_relations.append(Relation('eqa',angle_list_a))
+                        self.new_relations.append(Relation('eqa',angle_list_b))
                     
             elif(relation_type == 'simtri'): #相似，列表中的三角形互相相似，添加角相等, 问题:相似的三角形中存在特殊三角形怎么办
                 #方法：在关系列表中，三角形名字为相似/全等序，我们生成角相等和线相等等信息，然后以字母序存储相似/全等情况
@@ -132,6 +162,10 @@ class Infer:
                     name_b = "".join(name_b)
                     triangle_a = self.graph_info.triangle_find[name_a]
                     triangle_b = self.graph_info.triangle_find[name_b]
+                    #设置相似时使用基本名
+                    self.graph_info.info.simtri_list.union(triangle_a.get_name(), triangle_b.get_name())
+                    triangle_a.simtri_name = triangle_name_a
+                    triangle_b.simtri_name = triangle_name_b
                     for i in range(0,3):#角相等信息，三角形名字长度为3
                         angle_a = triangle_a.angle_dict[triangle_name_a[i]]
                         angle_b = triangle_b.angle_dict[triangle_name_b[i]]
@@ -141,12 +175,7 @@ class Infer:
                         angle_b_base_lb = self.graph_info.info.con_line.find_base(angle_b.lb.get_name()).data
                         base_angle_a = Angle(angle_a_base_la,angle_a_base_lb)
                         base_angle_b = Angle(angle_b_base_la,angle_b_base_lb)
-                        self.graph_info.info.equ_angles.union(base_angle_a.get_name(), base_angle_b.get_name())
-                        # self.graph_info.info.equ_angles.union(angle_a_name, angle_b_name)
-                    #设置相似时使用基本名
-                    self.graph_info.info.simtri_list.union(triangle_a.get_name(), triangle_b.get_name())
-                    triangle_a.simtri_name = triangle_name_a
-                    triangle_b.simtri_name = triangle_name_b
+                        self.new_relations.append(Relation('eqa',[base_angle_a.get_name(), base_angle_b.get_name()]))
             elif(relation_type == 'contri'): #全等，列表中的三角形互相全等，设置角相等和线相等 问题: 全等的三角形中存在特殊三角形怎么办
                 for i in range(0,len(relation.values) - 1):
                     triangle_name_a = relation.values[i]
@@ -165,11 +194,12 @@ class Infer:
                         angle_b_base_lb = self.graph_info.info.con_line.find_base(angle_b.lb.get_name()).data
                         base_angle_a = Angle(angle_a_base_la,angle_a_base_lb)
                         base_angle_b = Angle(angle_b_base_la,angle_b_base_lb)
-                        self.graph_info.info.equ_angles.union(base_angle_a.get_name(), base_angle_b.get_name())
+                        self.new_relations.append(Relation('eqa',[base_angle_a.get_name(), base_angle_b.get_name()]))
                         #设置等长
                         line_a_name = "".join(sorted([triangle_name_a[i], triangle_name_a[(i + 1) % 3]]))
                         line_b_name = "".join(sorted([triangle_name_b[i], triangle_name_b[(i + 1) % 3]]))
-                        self.graph_info.info.equ_lines.union(line_a_name,line_b_name)
+                        # self.graph_info.info.equ_lines.union(line_a_name,line_b_name)
+                        self.new_relations.append(Relation('cong',[line_a_name,line_b_name]))
                     #设置全等关系时使用基本名
                     self.graph_info.info.contri_list.union(name_a, name_b)
                     triangle_a.contri_name = triangle_name_a
@@ -240,10 +270,23 @@ class Infer:
 
 
     def run(self):
+        flag = True
+        count = 0
         print("开始运行")
-        self.set_relation(self.relations)
-        ans = self.check_relation(self.targets)
-        if(ans):
-            print("证明成功")
-        else:
-            print("证明失败")
+        while True:
+            if(count > 5): break
+            print("count:{v}".format(v=count))
+            self.show_relations(self.relations)
+            self.set_relation(self.relations)
+            ans = self.check_relation(self.targets)
+            if(ans):
+                print("证明成功")
+                flag = False
+                break
+            count += 1
+            self.relations = self.new_relations
+            self.new_relations = []
+        if(flag): print("证明失败")
+
+    def show_relations(self,relation_list: List[Relation]):
+        [print(relation) for relation in relation_list]

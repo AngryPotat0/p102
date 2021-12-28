@@ -2,5 +2,5 @@ point a(0,0),b(4,0),c(4,4),d(0,4),e(2,2)
 line ab,bc,cd,ad,bd,ac
 ponl e,bd
 ponl e,ac
-para cd,ab
+paral abcd
 prove eqa cde,eba

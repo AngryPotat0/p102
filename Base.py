@@ -232,7 +232,7 @@ class Quad:
         self.other_line = dict() #line_name : line_name   改名叫face_line之类的挺不错的，但是不想动了
         self.init_other_line()
 
-        self.angle_dict = dict()
+        self.angle_dict = dict() #point_name : Angle
         self.init_angle_dict()
 
     def init_other_line(self):
