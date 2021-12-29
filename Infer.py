@@ -1,3 +1,4 @@
+from enum import Flag
 from typing import List
 from Base import *
 from Info import *
@@ -64,13 +65,13 @@ class Infer:
                         check_set.add(line_a)
                         check_set.add(line_b)
                         #TODO: 对角相等
-            elif(relation_type == 'rect'):#长方形，对边平行且相等，四个角为直角
+            elif(relation_type == 'rect'):#矩形，对边平行且相等，四个角为直角
                 for rect_name in relation.values:
                     rect = self.graph_info.quad_find[rect_name]
                     self.graph_info.info.rect_list.add(rect_name)
                     check_set = set()
                     for k in rect.other_line:
-                        line_a, line_b = k, paral.other_line[k]
+                        line_a, line_b = k, rect.other_line[k]
                         if(line_a in check_set): continue
                         # self.new_relations.append(Relation('cong', [line_a, line_b]))
                         self.add_new_relations(Relation('cong', [line_a, line_b]))
@@ -84,7 +85,7 @@ class Infer:
                         angle = rect.angle_dict[k]
                         base_line_a = self.graph_info.info.con_line.find_base(rect.angle_dict[k].la.get_name()).data
                         base_line_b = self.graph_info.info.con_line.find_base(rect.angle_dict[k].lb.get_name()).data
-                        base_angle_list.append(Angle(base_angle_a, base_angle_b).get_name())
+                        base_angle_list.append(Angle(base_line_a, base_line_b).get_name())
                     # self.new_relations.append(Relation('rang',base_angle_list))
                     self.add_new_relations(Relation('rang',base_angle_list))
             elif(relation_type == 'rhom'): #菱形   我看谁用这个条件！！！
@@ -235,8 +236,12 @@ class Infer:
 
     def gen_relation(self) -> None:
         for quad in self.graph_info.quad_list:
-            if(self.is_paral(quad)): self.add_new_relations(Relation('paral',[quad.get_name()]))
-            if(self.is_squr(quad)): self.add_new_relations(Relation('squr',[quad.get_name()]))
+            if(self.is_squr(quad)):
+                self.add_new_relations(Relation('squr',[quad.get_name()]))
+            elif(self.is_rect(quad)):
+                self.add_new_relations(Relation('rect',[quad.get_name()]))
+            elif(self.is_paral(quad)):
+                self.add_new_relations(Relation('paral',[quad.get_name()]))
 
     def check_relation(self, target_list: List[Relation]) -> None:
         ans = True
@@ -251,7 +256,9 @@ class Infer:
                     if(quad_name not in self.graph_info.info.paral_list):
                         ans = False
             elif(relation_type == 'rect'):
-                pass
+                for quad_name in relation.values:
+                    if(quad_name not in self.graph_info.info.rect_list):
+                        ans = False
             elif(relation_type == 'rhom'):
                 pass
             elif(relation_type == 'squr'):
@@ -296,10 +303,11 @@ class Infer:
         print("开始运行")
         while True:
             if(count > 5): break
-            # print("count:{v}".format(v=count))
+            print("第{v}步：".format(v=count))
             self.show_relations(self.relations)
             self.set_relation(self.relations)
             self.gen_relation()
+            if(len(self.new_relations) == 0): break
             ans = self.check_relation(self.targets)
             # print("ANS::",ans)
             if(ans):
@@ -312,15 +320,29 @@ class Infer:
         if(flag): print("证明失败")
 
     def show_relations(self,relation_list: List[Relation]):
+        graph_list = {
+            "rect": "矩形",
+            "paral": "平行四边形",
+            "squr": "正方形"
+        }
         for relation in relation_list:
             relation_type = relation.type
             if(relation_type == 'cong'):
                 print("=".join(relation.values))
+            elif(relation_type == 'eqa'):
+                print("=".join(relation.values))
             elif(relation_type == 'para'):
                 print(" // ".join(relation.values))
-            elif(relation_type == 'paral'):
+            elif(relation_type == 'contri'):
+                triangle_list = ['▲' + name for name in relation.values]
+                print(" ≌  ".join(triangle_list))
+            elif(relation_type == 'rang'):
+                print('角{lis}是直角'.format(lis=",".join(relation.values)))
+            elif(relation_type == 'eqtri'):
+                print('三角形{lis}是等边三角形'.format(lis=",".join(relation.values)))
+            elif(relation_type in graph_list):
                 lis = ",".join(relation.values)
-                print("四边形{a}是平行四边形".format(a=lis))
+                print("四边形{a}是{t}".format(a=lis,t=graph_list[relation_type]))
             else:
                 print(relation)
 
@@ -329,9 +351,10 @@ class Infer:
             return
         self.new_relations.append(relation)
 
-    def is_squr(self, quad: Quad) -> bool: #这简直就是搞笑的
+    def is_squr(self, quad: Quad) -> bool:
         # 有一组邻边相等且一个角是直角的平行四边形是正方形.
         # 有一组邻边相等的矩形是正方形.
+        return False
         if(quad.get_name() in self.graph_info.info.squar_list): return False
         la, lb, lc, ld = quad.la, quad.lb, quad.lc, quad.ld
         ret = False
@@ -366,6 +389,29 @@ class Infer:
                 break
         if(flag): return True
         #两组对角相等 pass
+        return False
+    
+    def is_rect(self, quad: Quad) -> bool:
+        if(not self.is_paral(quad)): return False
+        for k in quad.angle_dict.keys():
+            angle = quad.angle_dict[k]
+            if(angle.get_name() in self.graph_info.info.rang_list):
+                return True
+        return False
+
+    def is_eqtri(self, triangle: Triangle) -> bool:
+        la,lb,lc = triangle.la.get_name(), triangle.lb.get_name(), triangle.lc.get_name()
+        if(self.graph_info.info.equ_lines.connected(la,lb) and self.graph_info.info.equ_lines.connected(lb,lc)):
+            return True
+        angle_list = []
+        for k in triangle.angle_dict.keys():
+            angle = triangle.angle_dict[k]
+            base_line_a = self.graph_info.info.con_line.find_base(angle.la.get_name()).data
+            base_line_b = self.graph_info.info.con_line.find_base(angle.lb.get_name()).data
+            angle_list.append(Angle(base_line_a,base_line_b).get_name())
+        angle_a, angle_b, angle_c = angle_list[0],angle_list[1],angle_list[2]
+        if(self.graph_info.info.equ_angles.connected(angle_a,angle_b) and self.graph_info.info.equ_angles.connected(angle_b,angle_c)):
+            return True
         return False
 
     def is_contri(self, triangle_a: Triangle, triangle_b: Triangle) -> bool:

@@ -8,7 +8,7 @@ from Infer import *
 while True:
     text = ""
     file_name = ""
-    file_name = input("请输入中间代码文件，输入exit退出：")
+    file_name = input("请输入中间代码文件名，输入exit退出：")
     if(file_name == 'exit'): break
     file = open(file_name)
     while(True):
