@@ -4,4 +4,4 @@ ponl e,bd
 ponl e,ac
 
 cong ab,bc,cd,ad
-prove rang abc
+prove para ab,cd

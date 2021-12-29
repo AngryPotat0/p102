@@ -55,10 +55,8 @@ class Infer:
                     self.graph_info.info.paral_list.add(paral_name) #平行四边形加入特殊图形集合
                     check_set = set()
                     for k in paral.other_line:
-                        print("DEBUG: time",k)
                         line_a, line_b = k, paral.other_line[k]
                         if(line_a in check_set): continue
-                        print("####",line_a,line_b)
                         # self.new_relations.append(Relation('cong',[line_a, line_b]))
                         self.add_new_relations(Relation('cong',[line_a, line_b]))
                         # self.new_relations.append(Relation('para',[line_a, line_b]))
@@ -237,6 +235,7 @@ class Infer:
 
     def gen_relation(self) -> None:
         for quad in self.graph_info.quad_list:
+            if(self.is_paral(quad)): self.add_new_relations(Relation('paral',[quad.get_name()]))
             if(self.is_squr(quad)): self.add_new_relations(Relation('squr',[quad.get_name()]))
 
     def check_relation(self, target_list: List[Relation]) -> None:
@@ -297,7 +296,7 @@ class Infer:
         print("开始运行")
         while True:
             if(count > 5): break
-            print("count:{v}".format(v=count))
+            # print("count:{v}".format(v=count))
             self.show_relations(self.relations)
             self.set_relation(self.relations)
             self.gen_relation()
@@ -313,7 +312,17 @@ class Infer:
         if(flag): print("证明失败")
 
     def show_relations(self,relation_list: List[Relation]):
-        [print(relation) for relation in relation_list]
+        for relation in relation_list:
+            relation_type = relation.type
+            if(relation_type == 'cong'):
+                print("=".join(relation.values))
+            elif(relation_type == 'para'):
+                print(" // ".join(relation.values))
+            elif(relation_type == 'paral'):
+                lis = ",".join(relation.values)
+                print("四边形{a}是平行四边形".format(a=lis))
+            else:
+                print(relation)
 
     def add_new_relations(self, relation: Relation): #防止添加重复条件
         if(self.check_relation([relation])):
@@ -323,20 +332,42 @@ class Infer:
     def is_squr(self, quad: Quad) -> bool: #这简直就是搞笑的
         # 有一组邻边相等且一个角是直角的平行四边形是正方形.
         # 有一组邻边相等的矩形是正方形.
-        # 对角线互相垂直的矩形是正方形.
-        # 有一个角为直角的菱形是正方形.
-        # 对角线相等的菱形是正方形.
-        # ......
         if(quad.get_name() in self.graph_info.info.squar_list): return False
         la, lb, lc, ld = quad.la, quad.lb, quad.lc, quad.ld
         ret = False
-        # 四边相等的四边形一定是菱形,但不一定是正方形啊!!!!!!!!!
         ret = (self.graph_info.info.equ_lines.connected(la.get_name(),lb.get_name())
                     and self.graph_info.info.equ_lines.connected(lb.get_name(),lc.get_name())
                     and self.graph_info.info.equ_lines.connected(lc.get_name(),ld.get_name())
                 )
-        return ret
+        if(ret == False): return ret
+
     
     def is_paral(self, quad: Quad) -> bool:
         if(quad.get_name() in self.graph_info.info.paral_list): return False
-        #对边平行，相等
+        #一组对边平行，相等
+        for k in quad.other_line.keys():
+            line_a, line_b = k,quad.other_line[k]
+            if(self.graph_info.info.para_lines.connected(line_a,line_b) and self.graph_info.info.equ_lines.connected(line_a,line_b)):
+                return True
+        #两组对边平行
+        flag = True
+        for k in quad.other_line.keys():
+            line_a, line_b = k,quad.other_line[k]
+            if(not self.graph_info.info.para_lines.connected(line_a,line_b)):
+                flag = False
+                break
+        if(flag): return True
+        #两组对边相等
+        flag = True
+        for k in quad.other_line.keys():
+            line_a, line_b = k,quad.other_line[k]
+            if(not self.graph_info.info.equ_lines.connected(line_a,line_b)):
+                flag = False
+                break
+        if(flag): return True
+        #两组对角相等 pass
+        return False
+
+    def is_contri(self, triangle_a: Triangle, triangle_b: Triangle) -> bool:
+        #SSS
+        pass
