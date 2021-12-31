@@ -7,3 +7,10 @@ ponl e,ac
 cong ab,bc,cd,ad
 rang dab
 prove rang bcd
+
+point a(0,0),b(4,0),c(6,2),d(2,2),e(3,1)
+line ab,bc,cd,ad,bd,ac
+ponl e,bd
+ponl e,ac
+paral abcd
+prove cong be,de

@@ -1,4 +1,4 @@
-from os import linesep, name, spawnle
+from os import linesep, name, spawnle, truncate
 from typing import List, Union
 from Base import*
 from UnionFInd import*
@@ -164,6 +164,8 @@ class GraphInfo:
         self.gen_graph()
         self.info.init_triangle(self.triangle_list)
         self.init_graph_find()
+        # print("Triangle list:")
+        # [print(triangle.get_name()) for triangle in self.triangle_list]
     
     def init_find(self):
         for p in self.point_list:
@@ -194,6 +196,8 @@ class GraphInfo:
                 base_line[l] = [p]
 
         for bl in base_line.keys():
+            # print("DEBUG:::")
+            # print(bl)
             lis = base_line[bl]
             lis.insert(0,bl[0])
             lis.append(bl[1])
@@ -203,19 +207,26 @@ class GraphInfo:
                         continue
                     # self.line_list.append(Line(lis[i],lis[j]))
                     self.line_list.append(Line(point_check[lis[i]],point_check[lis[j]]))
+
     
     def gen_graph(self) -> None:#run after gen_line
-        line_filter = set()
-        line_name_list = list()
-        for ponl in self.ponl_list:
-            line_name = ponl.line.get_name()
-            line_filter.add(line_name)
-        for line in self.line_list:
-            line_name = line.get_name()
-            if(line_name in line_filter):
-                continue
-            else:
-                line_name_list.append(line_name)
+        def point_on_line(point: Point, line: Line):
+            pi,pj = line.a, line.b
+            if((point.x-pi.x) * (pj.y-pi.y)==(pj.x-pi.x) * (point.y-pi.y) and min(pi.x,pj.x) <= point.x and point.x <= max(pi.x,pj.x) and min(pi.y,pj.y) <= point.y and point.y <= max(pi.y,pj.y)):
+                return True
+            return False
+        def get_split_lines() -> list: #太慢了，肯定有更好的方式
+            line_name_list = list()
+            for line in self.line_list:
+                flag = 1
+                for point in self.point_list:
+                    if(point.get_name() == line.a.get_name() or point.get_name() == line.b.get_name()): continue
+                    if(point_on_line(point,line)):
+                        flag = 0
+                        break
+                if(flag): line_name_list.append(line.get_name())
+            return line_name_list
+        line_name_list = get_split_lines()
         # print("++++++++++++++++++++++++++++++++++")
         # print(line_name_list)
         # print("++++++++++++++++++++++++++++++++++")

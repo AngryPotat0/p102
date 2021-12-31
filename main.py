@@ -8,7 +8,8 @@ from Infer import *
 while True:
     text = ""
     file_name = ""
-    file_name = input("请输入中间代码文件名，输入exit退出：")
+    # file_name = input("请输入中间代码文件名，输入exit退出：")
+    file_name = 'program.txt'
     if(file_name == 'exit'): break
     file = open(file_name)
     while(True):
@@ -26,6 +27,7 @@ while True:
     infer.set_info(graph)
     infer.init_before_run()
     infer.run()
+    break
     # graph.info.show_col_lines()
     # graph.info.show_union_find(graph.info.con_line)
     # graph.info.show_union_find(graph.info.para_lines, "para_lines:")

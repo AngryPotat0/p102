@@ -1,10 +1,6 @@
-point a(0,0),b(4,0),c(4,4),d(0,4),e(2,2)
+point a(0,0),b(4,0),c(6,2),d(2,2),e(3,1)
 line ab,bc,cd,ad,bd,ac
 ponl e,bd
 ponl e,ac
-
-contri edc,eab
-para cd,ab
-rang dab
-
-prove rang bcd
+paral abcd
+prove cong be,de

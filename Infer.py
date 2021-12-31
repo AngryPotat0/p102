@@ -143,14 +143,17 @@ class Infer:
                 cross_line_list = list()
                 uf = self.graph_info.info.con_line.get_uf()
                 # print("Scan::")
+                # print("DEBUG::para::")
                 for i in range(0,len(uf)):
                     element = uf[i]
-                    # print(element.data.get_name(),end=" ")
                     if(element.parent != i): continue
+                    # print(element.data.get_name(),end=" ")
                     line = element.data
                     if(line in para_line_list): continue
                     cross_line_list.append(line)
-
+                # print("sp")
+                # [print(line.get_name(),end=" ") for line in cross_line_list]
+                # print("END DEBUG")
                 for cross_line in cross_line_list:
                     angle_list_a = list()
                     angle_list_b = list()
@@ -234,15 +237,6 @@ class Infer:
                 line_b = line_b_lis[0] + line_b_lis[1]
                 self.graph_info.info.equ_lines.union(line_a, line_b)
 
-    def gen_relation(self) -> None:
-        for quad in self.graph_info.quad_list:
-            if(self.is_squr(quad)):
-                self.add_new_relations(Relation('squr',[quad.get_name()]))
-            elif(self.is_rect(quad)):
-                self.add_new_relations(Relation('rect',[quad.get_name()]))
-            elif(self.is_paral(quad)):
-                self.add_new_relations(Relation('paral',[quad.get_name()]))
-
     def check_relation(self, target_list: List[Relation]) -> None:
         ans = True
         for relation in target_list:
@@ -286,14 +280,16 @@ class Infer:
                     ans = self.graph_info.info.para_lines.connected(line_a_name,line_b_name)
             elif(relation_type == 'simtri'):
                 for i in range(0,len(relation.values) - 1):
-                    triangle_name_a = relation.values[i]
-                    triangle_name_b = relation.values[i + 1]
+                    triangle_name_a = "".join(sorted([relation.values[i][0],relation.values[i][1],relation.values[i][2]]))
+                    triangle_name_b = "".join(sorted([relation.values[i + 1][0],relation.values[i + 1][1],relation.values[i + 1][2]]))
                     ans = self.graph_info.info.simtri_list.connected(triangle_name_a,triangle_name_b)
             elif(relation_type == 'contri'):
                 for i in range(0,len(relation.values) - 1):
                     triangle_name_a = relation.values[i]
                     triangle_name_b = relation.values[i + 1]
-                    ans = self.graph_info.info.contri_list.connected(triangle_name_a,triangle_name_b)
+                    name_a = "".join(sorted([triangle_name_a[0], triangle_name_a[1], triangle_name_a[2]]))
+                    name_b = "".join(sorted([triangle_name_b[0], triangle_name_b[1], triangle_name_b[2]]))
+                    ans = self.graph_info.info.contri_list.connected(name_a,name_b)
         return ans
 
 
@@ -302,12 +298,11 @@ class Infer:
         count = 0
         print("开始运行")
         while True:
-            if(count > 5): break
-            print("第{v}步：".format(v=count))
+            if(count > 10): break
+            print("第{v}步:".format(v=count))
             self.show_relations(self.relations)
             self.set_relation(self.relations)
             self.gen_relation()
-            if(len(self.new_relations) == 0): break
             ans = self.check_relation(self.targets)
             # print("ANS::",ans)
             if(ans):
@@ -315,6 +310,7 @@ class Infer:
                 flag = False
                 break
             count += 1
+            if(len(self.new_relations) == 0): break
             self.relations = self.new_relations
             self.new_relations = []
         if(flag): print("证明失败")
@@ -336,6 +332,9 @@ class Infer:
             elif(relation_type == 'contri'):
                 triangle_list = ['▲' + name for name in relation.values]
                 print(" ≌  ".join(triangle_list))
+            elif(relation_type == 'simtri'):
+                triangle_list = ['▲' + name for name in relation.values]
+                print(" ~  ".join(triangle_list))
             elif(relation_type == 'rang'):
                 print('角{lis}是直角'.format(lis=",".join(relation.values)))
             elif(relation_type == 'eqtri'):
@@ -350,6 +349,23 @@ class Infer:
         if(self.check_relation([relation])):
             return
         self.new_relations.append(relation)
+
+    def gen_relation(self) -> None:
+        for quad in self.graph_info.quad_list:
+            if(self.is_squr(quad)):
+                self.add_new_relations(Relation('squr',[quad.get_name()]))
+            elif(self.is_rect(quad)):
+                self.add_new_relations(Relation('rect',[quad.get_name()]))
+            elif(self.is_paral(quad)):
+                self.add_new_relations(Relation('paral',[quad.get_name()]))
+        for i in range(0,len(self.graph_info.triangle_list)):
+            for j in range(i + 1,len(self.graph_info.triangle_list)):
+                triangle_a = self.graph_info.triangle_list[i]
+                triangle_b = self.graph_info.triangle_list[j]
+                lis = self.is_contri(triangle_a, triangle_b)
+                if(lis != None): self.add_new_relations(Relation('contri', lis))
+                lis = self.is_simtri(triangle_a, triangle_b)
+                if(lis != None): self.add_new_relations(Relation('simtri', lis))
 
     def is_squr(self, quad: Quad) -> bool:
         # 有一组邻边相等且一个角是直角的平行四边形是正方形.
@@ -370,13 +386,15 @@ class Infer:
         #一组对边平行，相等
         for k in quad.other_line.keys():
             line_a, line_b = k,quad.other_line[k]
-            if(self.graph_info.info.para_lines.connected(line_a,line_b) and self.graph_info.info.equ_lines.connected(line_a,line_b)):
+            base_line_a, base_line_b = self.graph_info.info.con_line.find_base(line_a).data.get_name(),self.graph_info.info.con_line.find_base(line_b).data.get_name()
+            if(self.graph_info.info.para_lines.connected(base_line_a, base_line_b) and self.graph_info.info.equ_lines.connected(base_line_a, base_line_b)):
                 return True
         #两组对边平行
         flag = True
         for k in quad.other_line.keys():
             line_a, line_b = k,quad.other_line[k]
-            if(not self.graph_info.info.para_lines.connected(line_a,line_b)):
+            base_line_a, base_line_b = self.graph_info.info.con_line.find_base(line_a).data.get_name(),self.graph_info.info.con_line.find_base(line_b).data.get_name()
+            if(not self.graph_info.info.para_lines.connected(base_line_a, base_line_b)):
                 flag = False
                 break
         if(flag): return True
@@ -384,7 +402,8 @@ class Infer:
         flag = True
         for k in quad.other_line.keys():
             line_a, line_b = k,quad.other_line[k]
-            if(not self.graph_info.info.equ_lines.connected(line_a,line_b)):
+            base_line_a, base_line_b = self.graph_info.info.con_line.find_base(line_a).data.get_name(),self.graph_info.info.con_line.find_base(line_b).data.get_name()
+            if(not self.graph_info.info.equ_lines.connected(base_line_a, base_line_b)):
                 flag = False
                 break
         if(flag): return True
@@ -414,6 +433,96 @@ class Infer:
             return True
         return False
 
-    def is_contri(self, triangle_a: Triangle, triangle_b: Triangle) -> bool:
-        #SSS
-        pass
+    def is_contri(self, triangle_a: Triangle, triangle_b: Triangle) -> list:
+        #ASA
+        def find_con_line_for_angles(angle_a: Angle, angle_b: Angle) -> Line:
+            line_list = [angle_a.la, angle_a.lb, angle_b.la, angle_b.lb]
+            line_filter = set()
+            for line in line_list:
+                if(line not in line_filter):
+                    line_filter.add(line)
+                else:
+                    return line
+            return None
+        def point_find(triangle: Triangle, point_a: str, point_b: str) -> str:
+            point_list = {point_a,point_b}
+            for k in triangle.angle_dict.keys():
+                if k not in point_list: return k
+            return None #不可能出现这种情况
+
+        angle_filter = set()
+        angle_list_a = list()
+        angle_list_b = list()
+        for k in triangle_a.angle_dict.keys():
+            angle_a = triangle_a.angle_dict[k]
+            for t in triangle_b.angle_dict.keys():
+                angle_b = triangle_b.angle_dict[t]
+                if(t in angle_filter): continue
+                base_angle_a = Angle(self.graph_info.info.con_line.find_base(angle_a.la.get_name()).data,self.graph_info.info.con_line.find_base(angle_a.lb.get_name()).data).get_name()
+                base_angle_b = Angle(self.graph_info.info.con_line.find_base(angle_b.la.get_name()).data,self.graph_info.info.con_line.find_base(angle_b.lb.get_name()).data).get_name()
+                if(self.graph_info.info.equ_angles.connected(base_angle_a,base_angle_b)):
+                    angle_filter.add(t)
+                    angle_list_a.append(k)
+                    angle_list_b.append(t)
+                    break
+        if(len(angle_list_a) == 2):
+            i = 0
+            point_l_a, point_r_a = angle_list_a[i], angle_list_a[(i + 1) % 3]
+            angle_l, angle_r = triangle_a.angle_dict[point_l_a], triangle_a.angle_dict[point_r_a]
+            con_line_a = find_con_line_for_angles(angle_l, angle_r)
+            point_l_b, point_r_b = angle_list_b[i], angle_list_b[(i + 1) % 3]
+            angle_l, angle_r = triangle_b.angle_dict[point_l_b], triangle_b.angle_dict[point_r_b]
+            con_line_b = find_con_line_for_angles(angle_l, angle_r)
+            if(self.graph_info.info.equ_lines.connected(con_line_a.get_name(), con_line_b.get_name())):
+                contri_name_a = point_l_a + point_r_a + point_find(triangle_a,point_l_a, point_r_a)
+                contri_name_b = point_l_b + point_r_b + point_find(triangle_b,point_l_b, point_r_b)
+                return [contri_name_a, contri_name_b]
+        if(len(angle_list_a) == 3):
+            for i in range(0,3):
+                point_l_a, point_r_a = angle_list_a[i], angle_list_a[(i + 1) % 3]
+                angle_l, angle_r = triangle_a.angle_dict[point_l_a], triangle_a.angle_dict[point_r_a]
+                con_line_a = find_con_line_for_angles(angle_l, angle_r)
+                point_l_b, point_r_b = angle_list_b[i], angle_list_b[(i + 1) % 3]
+                angle_l, angle_r = triangle_b.angle_dict[point_l_b], triangle_b.angle_dict[point_r_b]
+                con_line_b = find_con_line_for_angles(angle_l, angle_r)
+                if(self.graph_info.info.equ_lines.connected(con_line_a.get_name(), con_line_b.get_name())):
+                    contri_name_a = point_l_a + point_r_a + point_find(triangle_a,point_l_a, point_r_a)
+                    contri_name_b = point_l_b + point_r_b + point_find(triangle_b,point_l_b, point_r_b)
+                    return [contri_name_a, contri_name_b]
+        return None
+
+    def is_simtri(self, triangle_a: Triangle, triangle_b: Triangle) -> list:
+        # print("####Triangle:",triangle_a.get_name(),triangle_b.get_name())
+        def point_find(triangle: Triangle, point_a: str, point_b: str) -> str:
+            point_list = {point_a,point_b}
+            for k in triangle.angle_dict.keys():
+                if k not in point_list: return k
+            return None #不可能出现这种情况
+        #AAA
+        angle_filter = set()
+        angle_list_a = list()
+        angle_list_b = list()
+        for k in triangle_a.angle_dict.keys():
+            angle_a = triangle_a.angle_dict[k]
+            for t in triangle_b.angle_dict.keys():
+                angle_b = triangle_b.angle_dict[t]
+                if(t in angle_filter): continue
+                base_angle_a = Angle(self.graph_info.info.con_line.find_base(angle_a.la.get_name()).data,self.graph_info.info.con_line.find_base(angle_a.lb.get_name()).data).get_name()
+                base_angle_b = Angle(self.graph_info.info.con_line.find_base(angle_b.la.get_name()).data,self.graph_info.info.con_line.find_base(angle_b.lb.get_name()).data).get_name()
+                if(self.graph_info.info.equ_angles.connected(base_angle_a,base_angle_b)):
+                    # print("#####append::",k,t)
+                    angle_filter.add(t)
+                    angle_list_a.append(k)
+                    angle_list_b.append(t)
+                    break
+        if(len(angle_list_a) == 2):
+            simtri_name_a = angle_list_a[0] + angle_list_a[1] + point_find(triangle_a,angle_list_a[0],angle_list_a[1])
+            simtri_name_b = angle_list_b[0] + angle_list_b[1] + point_find(triangle_b,angle_list_b[0],angle_list_b[1])
+            # print("####SIMTRI 2::",[simtri_name_a, simtri_name_b])
+            return [simtri_name_a, simtri_name_b]
+        if(len(angle_list_a) == 3):
+            simtri_name_a = angle_list_a[0] + angle_list_a[1] + angle_list_a[2]
+            simtri_name_b = angle_list_b[0] + angle_list_b[1] + angle_list_b[2]
+            # print("####SIMTRI 3::",[simtri_name_a, simtri_name_b])
+            return [simtri_name_a, simtri_name_b]
+        return None
