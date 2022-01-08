@@ -1,6 +1,6 @@
 from httpServer import*
 
-ip = 'localhost'
+ip = '0.0.0.0'
 port = 8080
 s = httpServer(ip,port)
 s.run()

@@ -3,6 +3,12 @@ from typing import List
 from Base import *
 from Info import *
 
+graph_list = {
+            "rect": "矩形",
+            "paral": "平行四边形",
+            "squr": "正方形"
+        }
+
 class Infer:
     def __init__(self) -> None:
         self.relations = list()
@@ -296,54 +302,61 @@ class Infer:
     def run(self):
         flag = True
         count = 0
-        print("开始运行")
+        # print("开始运行")
+        status = "1"
+        msg = ""
         while True:
             if(count > 10): break
-            print("第{v}步:".format(v=count))
-            self.show_relations(self.relations)
+            # print("第{v}步:".format(v=count))
+            msg += "第{v}步:\n".format(v=count)
+            msg += self.show_relations(self.relations)
             self.set_relation(self.relations)
             self.gen_relation()
             ans = self.check_relation(self.targets)
             # print("ANS::",ans)
             if(ans):
-                print("证明成功")
+                # print("证明成功")
+                msg += "证明成功\n"
                 flag = False
                 break
             count += 1
             if(len(self.new_relations) == 0): break
             self.relations = self.new_relations
             self.new_relations = []
-        if(flag): print("证明失败")
+        if(flag):
+            msg += "证明失败\n"
+            status = "0"
+        return {'status':status,'msg':msg}
+        # return msg
+        
 
     def show_relations(self,relation_list: List[Relation]):
-        graph_list = {
-            "rect": "矩形",
-            "paral": "平行四边形",
-            "squr": "正方形"
-        }
+        ans = ""
         for relation in relation_list:
             relation_type = relation.type
-            if(relation_type == 'cong'):
-                print("=".join(relation.values))
-            elif(relation_type == 'eqa'):
-                print("=".join(relation.values))
+            if(relation_type == 'cong' or relation_type == 'eqa'):
+                ans += "=".join(relation.values)
             elif(relation_type == 'para'):
-                print(" // ".join(relation.values))
+                ans += " // ".join(relation.values)
             elif(relation_type == 'contri'):
                 triangle_list = ['▲' + name for name in relation.values]
-                print(" ≌  ".join(triangle_list))
+                ans += " ≌  ".join(triangle_list)
+                # ans += "Triangle " + ",".join(relation.values) + " is congruent triangles"
             elif(relation_type == 'simtri'):
                 triangle_list = ['▲' + name for name in relation.values]
-                print(" ~  ".join(triangle_list))
+                ans += " ~  ".join(triangle_list)
+                # ans += "Triangle " + ",".join(relation.values) + " is similar triangles"
             elif(relation_type == 'rang'):
-                print('角{lis}是直角'.format(lis=",".join(relation.values)))
+                ans += '{lis} is right angle'.format(lis=",".join(relation.values))
             elif(relation_type == 'eqtri'):
-                print('三角形{lis}是等边三角形'.format(lis=",".join(relation.values)))
+                ans += '{lis} is equilateral triangle'.format(lis=",".join(relation.values))
             elif(relation_type in graph_list):
                 lis = ",".join(relation.values)
-                print("四边形{a}是{t}".format(a=lis,t=graph_list[relation_type]))
+                ans += "{a} is {t}".format(a=lis,t=graph_list[relation_type])
             else:
-                print(relation)
+                ans += relation
+            ans += '\n'
+        return ans
 
     def add_new_relations(self, relation: Relation): #防止添加重复条件
         if(self.check_relation([relation])):

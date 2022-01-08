@@ -1,6 +1,9 @@
 import socket
 import os
 import json
+from Run import*
+
+run = Runner()
 
 class httpServer:
     def __init__(self,ip: str, port: int):
@@ -22,26 +25,31 @@ class httpServer:
                 print("request error")
                 conn.close()
             # url_type = request['url'].split('.')[-1]
-            # try:
-            file_type = "application/json"
+            try:
+                code = json.loads(request["body"])
+                # print("DEBUG::",code)
+                # print("Code:",code['code'])
+                data = run.run(code['code'])
 
-            response = bytes('HTTP/1.1 200 OK' + os.linesep + 'Content-Type:%s'% file_type + os.linesep + os.linesep, encoding="utf-8")
+                print("######DATA:")
+                print(data)
 
-            data = {
-                "status" : "1",
-                "msg" : "hello"
-            }
-            print("Response: " + json.dumps(data))
-            response += bytes(json.dumps(data),encoding="utf-8")
-            conn.sendall(response)
-            conn.close()
-            # except:
-            #     print("Unknow error")
-            #     response = bytes("HTTP/1.1 404 Not Found" + os.linesep, encoding="utf-8")
-            #     conn.sendall(response)
-            #     conn.close()
+                file_type = "application/json"
+
+                response = bytes('HTTP/1.1 200 OK' + os.linesep + 'Content-Type:%s'% file_type + os.linesep + os.linesep, encoding="utf-8")
+
+                # print("Response: " + json.dumps(data))
+                response += bytes(json.dumps(data),encoding="utf-8")
+                conn.sendall(response)
+                conn.close()
+            except Exception as e:
+                print("Error",e)
+                response = bytes("HTTP/1.1 404 Not Found" + os.linesep, encoding="utf-8")
+                conn.sendall(response)
+                conn.close()
 
     def parseRequest(self,request,addr):
+        # print("REquest::",request)
         request_split = request.split('\r\n')
         method, url, version = request_split[0].split(' ')
 
@@ -66,4 +74,5 @@ class httpServer:
             'head': requestHead,
             'body': requestBody
         }
+        # print("ANS::::",ans)
         return ans
